@@ -13,6 +13,7 @@ interface EditableFieldProps {
   readOnly?: boolean;
   placeholder?: string;
   isCurrency?: boolean;
+  compact?: boolean;
 }
 
 export const EditableField: React.FC<EditableFieldProps> = ({
@@ -24,7 +25,8 @@ export const EditableField: React.FC<EditableFieldProps> = ({
   className = '',
   readOnly = false,
   placeholder = '-',
-  isCurrency = false
+  isCurrency = false,
+  compact = false
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState(value);
@@ -52,15 +54,15 @@ export const EditableField: React.FC<EditableFieldProps> = ({
     }
   };
 
-  const inputBaseClasses = "w-full bg-white border-b-2 border-blue-500 px-1 py-2 text-base md:text-sm text-slate-800 outline-none transition-all";
+  const inputBaseClasses = `w-full bg-white border-b-2 border-blue-500 px-1 ${compact ? 'py-1' : 'py-2'} text-base md:text-sm text-slate-800 outline-none transition-all`;
 
   if (readOnly) {
     return (
       <div className={`flex flex-col group ${className}`}>
-        <span className="text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
+        <span className={`text-[10px] uppercase font-bold text-slate-400 ${compact ? 'mb-0' : 'mb-1'} flex items-center gap-1`}>
           {Icon && <Icon size={10} />} {label}
         </span>
-        <div className="text-base md:text-sm font-bold text-slate-700 px-1 py-2 md:py-0.5 min-h-[48px] md:min-h-[24px] flex items-center">
+        <div className={`text-base md:text-sm font-bold text-slate-700 px-1 ${compact ? 'py-0.5' : 'py-2 md:py-0.5'} ${compact ? 'min-h-[24px]' : 'min-h-[48px] md:min-h-[24px]'} flex items-center`}>
           {isCurrency && value ? `$ ${formatNumberWithDots(value)}` : (value || <span className="text-slate-300 font-normal italic">{placeholder}</span>)}
         </div>
       </div>
@@ -69,7 +71,7 @@ export const EditableField: React.FC<EditableFieldProps> = ({
 
   return (
     <div className={`flex flex-col group ${className}`}>
-      <span className="text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
+      <span className={`text-[10px] uppercase font-bold text-slate-400 ${compact ? 'mb-0' : 'mb-1'} flex items-center gap-1`}>
         {Icon && <Icon size={10} />} {label}
       </span>
       {isEditing ? (
@@ -92,7 +94,7 @@ export const EditableField: React.FC<EditableFieldProps> = ({
             setTempValue(isCurrency ? formatNumberWithDots(value) : value);
             setIsEditing(true);
           }}
-          className="text-base md:text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 hover:text-blue-700 px-1 -ml-1 py-2 md:py-0.5 rounded transition-colors flex items-center gap-2 min-h-[48px] md:min-h-[24px]"
+          className={`text-base md:text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 hover:text-blue-700 px-1 -ml-1 ${compact ? 'py-0.5' : 'py-2 md:py-0.5'} rounded transition-colors flex items-center gap-2 ${compact ? 'min-h-[24px]' : 'min-h-[48px] md:min-h-[24px]'}`}
           title="Clic para editar"
         >
           <span className="truncate">

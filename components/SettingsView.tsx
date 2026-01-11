@@ -165,18 +165,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
    return (
       <div className="w-full max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-y-auto h-full px-4 sm:px-6">
-         <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+         <div className="mb-4 md:mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-4">
             <div>
-               <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Panel de Configuración</h2>
-               <p className="text-slate-500 text-sm">Administra y personaliza la infraestructura corporativa de {settings.companyName}</p>
+               <h2 className="text-xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Configuración</h2>
+               <p className="text-slate-500 text-[10px] md:text-sm">Infraestructura de {settings.companyName}</p>
             </div>
          </div>
 
-         {/* Tabs */}
-         <div className="flex gap-6 mb-6 border-b border-slate-200">
+         {/* Tabs - Scrollable on mobile */}
+         <div className="flex overflow-x-auto flex-nowrap gap-4 md:gap-6 mb-6 border-b border-slate-200 no-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
             <button
                onClick={() => setActiveTab('GENERAL')}
-               className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'GENERAL' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+               className={`pb-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === 'GENERAL' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
             >
                General & Sistema
             </button>
@@ -184,7 +184,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {canManageTeam && (
                <button
                   onClick={() => setActiveTab('TEAM')}
-                  className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'TEAM' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                  className={`pb-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === 'TEAM' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
                >
                   Usuarios y Equipo
                </button>
@@ -193,7 +193,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {canManageSettings && (
                <button
                   onClick={() => setActiveTab('VIEW')}
-                  className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'VIEW' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                  className={`pb-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === 'VIEW' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
                >
                   Vista y Tablero
                </button>
@@ -202,7 +202,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {canViewAudit && (
                <button
                   onClick={() => setActiveTab('AUDIT')}
-                  className={`pb-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'AUDIT' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                  className={`pb-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === 'AUDIT' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
                >
                   Auditoría y Logs
                </button>
@@ -226,29 +226,29 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <div className="lg:col-span-8 space-y-8">
 
                      {/* GENERAL SETTINGS */}
-                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                     <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200">
                         <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-4">
-                           <div className="bg-slate-100 p-2 rounded-lg"><Settings size={20} className="text-slate-700" /></div>
-                           <h3 className="font-bold text-lg text-slate-800">Datos del Negocio</h3>
+                           <div className="bg-slate-100 p-2 rounded-lg"><Settings size={18} className="text-slate-700" /></div>
+                           <h3 className="font-bold text-base md:text-lg text-slate-800">Datos del Negocio</h3>
                         </div>
 
                         {canManageSettings ? (
                            <div className="grid gap-4">
                               <div>
-                                 <label className="block text-sm font-bold text-slate-500 uppercase mb-1">Nombre Comercial</label>
-                                 <div className="flex gap-2">
+                                 <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1">Nombre Comercial</label>
+                                 <div className="flex flex-col sm:flex-row gap-2">
                                     <input
                                        type="text"
-                                       className="flex-1 border border-slate-300 bg-white text-slate-900 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                       className="flex-1 border border-slate-300 bg-white text-slate-900 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
                                        value={tempBusinessName}
                                        onChange={e => setTempBusinessName(e.target.value)}
                                        placeholder="Escribe el nombre de tu empresa..."
                                     />
                                     <button
                                        onClick={handleSaveName}
-                                       className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors shadow-sm"
+                                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors shadow-sm text-sm"
                                     >
-                                       <Save size={18} /> Guardar
+                                       <Save size={18} /> <span>Guardar</span>
                                     </button>
                                  </div>
                               </div>

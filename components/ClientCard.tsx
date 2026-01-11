@@ -71,31 +71,30 @@ export const ClientCard: React.FC<ClientCardProps> = ({
          <div className="bg-white border-b border-slate-200 shrink-0 shadow-sm z-20 relative">
 
             {/* Top Bar: Nav + Main Status */}
-            <div className="px-4 py-3 sm:px-6 sm:py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-               <div className="flex items-center gap-3 w-full">
-                  <button onClick={onBack} className="p-3 -ml-3 hover:bg-slate-100 rounded-full text-slate-500 transition-colors shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center">
-                     <ArrowLeft size={24} />
+            <div className="px-3 py-2 sm:px-6 sm:py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-4">
+               <div className="flex items-center gap-2 w-full">
+                  <button onClick={onBack} className="p-2 -ml-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center">
+                     <ArrowLeft size={20} />
                   </button>
                   <div className="flex-1 overflow-hidden">
-                     {/* Name is also editable now */}
                      <EditableField
                         label="Nombre Cliente"
                         value={client.name}
                         onSave={(v) => updateField('name', v)}
-                        className="mb-1"
+                        className="mb-0"
                         readOnly={!can('edit_clients')}
                      />
-                     <div className="flex items-center gap-2">
-                        <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs font-mono font-bold border border-slate-200">
+                     <div className="flex items-center gap-1.5">
+                        <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border border-slate-200">
                            #{client.cardCode}
                         </span>
                         {client.status === 'ACTIVE' ? (
-                           <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded text-xs font-bold border border-green-100 flex items-center gap-1">
-                              <CheckCircle size={10} /> ACTIVO
+                           <span className="text-green-600 bg-green-50 px-1.5 py-0.5 rounded text-[10px] font-bold border border-green-100 flex items-center gap-1">
+                              <CheckCircle size={8} /> ACTIVO
                            </span>
                         ) : (
-                           <span className="text-slate-500 bg-slate-100 px-2 py-0.5 rounded text-xs font-bold border border-slate-200 flex items-center gap-1">
-                              <Ban size={10} /> CERRADO
+                           <span className="text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-bold border border-slate-200 flex items-center gap-1">
+                              <Ban size={8} /> CERRADO
                            </span>
                         )}
                      </div>
@@ -103,31 +102,31 @@ export const ClientCard: React.FC<ClientCardProps> = ({
                </div>
 
                {/* ACTION BUTTONS: Updated to use grid on mobile for primary actions */}
-               <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2 w-full md:w-auto mt-0 items-center">
+               <div className="grid grid-cols-2 md:flex md:flex-wrap gap-1.5 w-full md:w-auto items-center">
                   {can('create_transactions') && (
                      <>
                         <button
                            onClick={() => onAddTransaction('PAYMENT')}
                            disabled={client.status === 'INACTIVE'}
-                           className="px-3 py-3 md:py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-black md:font-bold rounded-xl md:rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                           className="px-2 py-2.5 md:py-2 bg-green-600 hover:bg-green-700 text-white text-[13px] font-black md:font-bold rounded-xl md:rounded-lg shadow-md transition-all flex items-center justify-center gap-1 disabled:opacity-50 whitespace-nowrap"
                         >
-                           <DollarSign size={18} /> Abonar
+                           <DollarSign size={16} /> Abonar
                         </button>
 
                         <button
                            onClick={() => onAddTransaction('REDIRECT')}
                            disabled={client.status === 'INACTIVE'}
-                           className="px-3 py-3 md:py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-black md:font-bold rounded-xl md:rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                           className="px-2 py-2.5 md:py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-[13px] font-black md:font-bold rounded-xl md:rounded-lg shadow-md transition-all flex items-center justify-center gap-1 disabled:opacity-50 whitespace-nowrap"
                         >
-                           <ArrowRightLeft size={18} /> Redirigir
+                           <ArrowRightLeft size={16} /> Redirigir
                         </button>
 
                         <button
                            onClick={() => onAddTransaction('DISBURSEMENT')}
                            disabled={client.status === 'INACTIVE' && currentBalance > 0}
-                           className="col-span-2 md:col-span-1 px-3 py-3 md:py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-black md:font-bold rounded-xl md:rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                           className="col-span-2 md:col-span-1 px-2 py-2.5 md:py-2 bg-slate-800 hover:bg-slate-900 text-white text-[13px] font-black md:font-bold rounded-xl md:rounded-lg shadow-md transition-all flex items-center justify-center gap-1 disabled:opacity-50 whitespace-nowrap"
                         >
-                           <TrendingUp size={18} /> Prestar
+                           <TrendingUp size={16} /> Prestar
                         </button>
                      </>
                   )}
@@ -167,8 +166,8 @@ export const ClientCard: React.FC<ClientCardProps> = ({
          <div className="flex-1 overflow-y-auto bg-slate-100 relative">
 
             {/* DETAILS GRID - MOVED TO SCROLLABLE AREA TO FIX MOBILE LAYOUT */}
-            <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 shadow-sm mb-4">
-               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-4">
+            <div className="bg-white border-b border-slate-200 px-3 sm:px-6 py-3 shadow-sm mb-4">
+               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-3">
                   <EditableField
                      label="Cédula"
                      value={client.cedula}
@@ -176,6 +175,7 @@ export const ClientCard: React.FC<ClientCardProps> = ({
                      type="number"
                      onSave={(v) => updateField('cedula', v)}
                      readOnly={!can('edit_clients')}
+                     compact={true}
                   />
                   <EditableField
                      label="Teléfono"
@@ -184,6 +184,7 @@ export const ClientCard: React.FC<ClientCardProps> = ({
                      type="number"
                      onSave={(v) => updateField('phone', v)}
                      readOnly={!can('edit_clients')}
+                     compact={true}
                   />
                   <EditableField
                      label="Dirección Casa"
