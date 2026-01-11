@@ -298,27 +298,26 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
                         {settings.useOpenAI && (
                            <div className="animate-in fade-in slide-in-from-top-2 space-y-5">
+                              <div>
+                                 <DebouncedInput
+                                    label="Nombre del Asistente"
+                                    value={settings.aiAgentName || 'LuchoBot'}
+                                    onChange={(val) => onUpdateSettings({ ...settings, aiAgentName: val })}
+                                    placeholder="Ej: LuchoBot"
+                                 />
+                              </div>
 
-                                  <DebouncedInput
-                                     label="Nombre del Asistente"
-                                     value={settings.aiAgentName || 'LuchoBot'}
-                                     onChange={(val) => onUpdateSettings({ ...settings, aiAgentName: val })}
-                                     placeholder="Ej: LuchoBot"
-                                  />
-                                 </div>
-
-                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Proveedor de IA</label>
-                                    <select
-                                       className="w-full border border-slate-300 bg-white text-slate-900 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm appearance-none"
-                                       value={settings.aiProvider || 'GEMINI'}
-                                       onChange={e => onUpdateSettings({ ...settings, aiProvider: e.target.value as any })}
-                                    >
-                                       <option value="GEMINI">Google Gemini 1.5 (Recomendado)</option>
-                                       <option value="SUPABASE">Supabase AI</option>
-                                       <option value="OPENAI">OpenAI (GPT-4)</option>
-                                    </select>
-                                 </div>
+                              <div>
+                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Proveedor de IA</label>
+                                 <select
+                                    className="w-full border border-slate-300 bg-white text-slate-900 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm appearance-none"
+                                    value={settings.aiProvider || 'GEMINI'}
+                                    onChange={e => onUpdateSettings({ ...settings, aiProvider: e.target.value as any })}
+                                 >
+                                    <option value="GEMINI">Google Gemini 1.5 (Recomendado)</option>
+                                    <option value="SUPABASE">Supabase AI</option>
+                                    <option value="OPENAI">OpenAI (GPT-4)</option>
+                                 </select>
                               </div>
 
                               <div>
@@ -333,7 +332,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                               </div>
 
                               <div>
-                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1 flex justify-between">
+                                 <label className="block text-xs font-bold text-slate-500 uppercase flex justify-between">
                                     <span>Prompt de Sistema (Identidad)</span>
                                     <span className="text-blue-600 cursor-pointer hover:underline" onClick={() => onUpdateSettings({ ...settings, aiSystemPrompt: DEFAULT_SYSTEM_PROMPT })}>Restaurar Prompt "LuchoBot"</span>
                                  </label>
@@ -344,157 +343,152 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                     helperText="Este texto define la personalidad, reglas y límites de negociación de tu agente."
                                  />
                               </div>
-
                            </div>
-            )}
-         </div>
+                        )}
+                     </div>
                   )}
-      </div>
-   )
-}
-
-{/* AUDIT LOG TAB */ }
-{
-   activeTab === 'AUDIT' && canViewAudit && (
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col min-h-[600px] animate-in fade-in slide-in-from-right-4 overflow-hidden">
-         {/* Header and Filter */}
-         <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white shrink-0">
-            <div className="flex items-center gap-4">
-               <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-3 rounded-xl shadow-lg shadow-slate-200 text-white">
-                  <Activity size={24} className="text-emerald-400" />
                </div>
-               <div>
-                  <h3 className="font-bold text-xl text-slate-800">Historial de Movimientos</h3>
-                  <p className="text-sm text-slate-500">Registro detallado de acciones y seguridad.</p>
-               </div>
-            </div>
+            )}
 
-            <div className="flex items-center gap-2 w-full sm:w-auto bg-slate-50 p-1.5 rounded-xl border border-slate-200">
-               <div className="relative flex-1 sm:w-64">
-                  <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
-                  <input
-                     type="text"
-                     placeholder="Buscar por usuario, acción..."
-                     className="w-full pl-10 pr-4 py-2 text-sm bg-transparent outline-none text-slate-700 placeholder:text-slate-400"
-                     value={logFilter}
-                     onChange={e => setLogFilter(e.target.value)}
-                  />
-               </div>
-               <div className="h-6 w-px bg-slate-200 mx-1"></div>
-               <button
-                  onClick={copyLogs}
-                  className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  title="Copiar Logs"
-               >
-                  <Copy size={18} />
-               </button>
-               <button
-                  onClick={onClearLogs}
-                  className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  title="Limpiar Logs"
-               >
-                  <Trash2 size={18} />
-               </button>
-            </div>
-         </div>
-
-         {/* Table Header */}
-         <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-blue-50/50 border-b border-blue-100 text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0 select-none">
-            <div className="col-span-2">Fecha</div>
-            <div className="col-span-2">Actor</div>
-            <div className="col-span-2 text-center">Acción</div>
-            <div className="col-span-2">Entidad</div>
-            <div className="col-span-4">Detalle</div>
-         </div>
-
-         {/* List */}
-         <div className="flex-1 overflow-y-auto bg-white scrollbar-thin">
-            {filteredLogs.length === 0 ? (
-               <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-3 py-20">
-                  <Terminal size={48} className="opacity-10" />
-                  <p className="text-sm font-medium">Sin registros recientes</p>
-               </div>
-            ) : (
-               <div className="divide-y divide-slate-50">
-                  {filteredLogs.map((log) => {
-                     const dateObj = new Date(log.timestamp);
-                     const dateStr = dateObj.toLocaleDateString('es-CO', { year: 'numeric', month: '2-digit', day: '2-digit' });
-                     const timeStr = dateObj.toLocaleTimeString('es-CO', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-                     // Determine styles
-                     let badgeClass = "bg-slate-100 text-slate-600 border-slate-200";
-                     if (log.action === 'CREATE') badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm shadow-emerald-100";
-                     if (log.action === 'UPDATE') badgeClass = "bg-blue-50 text-blue-700 border-blue-200 shadow-sm shadow-blue-100";
-                     if (log.action === 'DELETE') badgeClass = "bg-red-50 text-red-700 border-red-200 shadow-sm shadow-red-100";
-                     if (log.action === 'LOGIN') badgeClass = "bg-violet-50 text-violet-700 border-violet-200 shadow-sm shadow-violet-100";
-                     if (log.action === 'SYSTEM') badgeClass = "bg-amber-50 text-amber-700 border-amber-200 shadow-sm shadow-amber-100";
-
-                     const isError = log.level === 'ERROR';
-
-                     return (
-                        <div key={log.id} className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-slate-50/80 transition-colors group items-start border-l-4 border-l-transparent hover:border-l-blue-500">
-                           {/* DATE */}
-                           <div className="col-span-2 flex flex-col justify-center">
-                              <span className="font-bold text-slate-700 text-xs font-mono">{timeStr}</span>
-                              <span className="text-[10px] text-slate-400 mt-0.5">{dateStr}</span>
-                           </div>
-
-                           {/* ACTOR */}
-                           <div className="col-span-2 flex items-center gap-3 overflow-hidden">
-                              <div className="w-8 h-8 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-[10px] font-bold text-slate-600 shrink-0">
-                                 {log.actor.substring(0, 2).toUpperCase()}
-                              </div>
-                              <div className="flex flex-col overflow-hidden">
-                                 <span className="text-xs font-bold text-slate-700 truncate" title={log.actor}>
-                                    {log.actor.split('@')[0]}
-                                 </span>
-                                 <span className="text-[9px] text-slate-400 truncate hidden xl:block">
-                                    {log.actor}
-                                 </span>
-                              </div>
-                           </div>
-
-                           {/* ACTION */}
-                           <div className="col-span-2 flex justify-center">
-                              <span className={`inline-flex items-center justify-center px-3 py-1 rounded-md text-[10px] font-bold tracking-wide border w-24 text-center select-none uppercase ${badgeClass}`}>
-                                 {log.action}
-                              </span>
-                           </div>
-
-                           {/* ENTITY */}
-                           <div className="col-span-2 flex items-center">
-                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded border border-slate-200">
-                                 {log.entity}
-                              </span>
-                           </div>
-
-                           {/* DETAILS */}
-                           <div className="col-span-4 text-xs leading-relaxed">
-                              <p className={`font-semibold mb-1 ${isError ? 'text-red-600' : 'text-slate-800'}`}>
-                                 {log.message}
-                              </p>
-                              {log.details && (
-                                 <div className="font-mono text-[10px] text-slate-500 bg-slate-100 p-2 rounded border border-slate-200 break-all shadow-inner">
-                                    {log.details}
-                                 </div>
-                              )}
-                           </div>
+            {/* AUDIT LOG TAB */}
+            {activeTab === 'AUDIT' && canViewAudit && (
+               <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col min-h-[600px] animate-in fade-in slide-in-from-right-4 overflow-hidden">
+                  {/* Header and Filter */}
+                  <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white shrink-0">
+                     <div className="flex items-center gap-4">
+                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-3 rounded-xl shadow-lg shadow-slate-200 text-white">
+                           <Activity size={24} className="text-emerald-400" />
                         </div>
-                     );
-                  })}
+                        <div>
+                           <h3 className="font-bold text-xl text-slate-800">Historial de Movimientos</h3>
+                           <p className="text-sm text-slate-500">Registro detallado de acciones y seguridad.</p>
+                        </div>
+                     </div>
+
+                     <div className="flex items-center gap-2 w-full sm:w-auto bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                        <div className="relative flex-1 sm:w-64">
+                           <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
+                           <input
+                              type="text"
+                              placeholder="Buscar por usuario, acción..."
+                              className="w-full pl-10 pr-4 py-2 text-sm bg-transparent outline-none text-slate-700 placeholder:text-slate-400"
+                              value={logFilter}
+                              onChange={e => setLogFilter(e.target.value)}
+                           />
+                        </div>
+                        <div className="h-6 w-px bg-slate-200 mx-1"></div>
+                        <button
+                           onClick={copyLogs}
+                           className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                           title="Copiar Logs"
+                        >
+                           <Copy size={18} />
+                        </button>
+                        <button
+                           onClick={onClearLogs}
+                           className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                           title="Limpiar Logs"
+                        >
+                           <Trash2 size={18} />
+                        </button>
+                     </div>
+                  </div>
+
+                  {/* Table Header */}
+                  <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-blue-50/50 border-b border-blue-100 text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0 select-none">
+                     <div className="col-span-2">Fecha</div>
+                     <div className="col-span-2">Actor</div>
+                     <div className="col-span-2 text-center">Acción</div>
+                     <div className="col-span-2">Entidad</div>
+                     <div className="col-span-4">Detalle</div>
+                  </div>
+
+                  {/* List */}
+                  <div className="flex-1 overflow-y-auto bg-white scrollbar-thin">
+                     {filteredLogs.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-3 py-20">
+                           <Terminal size={48} className="opacity-10" />
+                           <p className="text-sm font-medium">Sin registros recientes</p>
+                        </div>
+                     ) : (
+                        <div className="divide-y divide-slate-50">
+                           {filteredLogs.map((log) => {
+                              const dateObj = new Date(log.timestamp);
+                              const dateStr = dateObj.toLocaleDateString('es-CO', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                              const timeStr = dateObj.toLocaleTimeString('es-CO', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                              // Determine styles
+                              let badgeClass = "bg-slate-100 text-slate-600 border-slate-200";
+                              if (log.action === 'CREATE') badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm shadow-emerald-100";
+                              if (log.action === 'UPDATE') badgeClass = "bg-blue-50 text-blue-700 border-blue-200 shadow-sm shadow-blue-100";
+                              if (log.action === 'DELETE') badgeClass = "bg-red-50 text-red-700 border-red-200 shadow-sm shadow-red-100";
+                              if (log.action === 'LOGIN') badgeClass = "bg-violet-50 text-violet-700 border-violet-200 shadow-sm shadow-violet-100";
+                              if (log.action === 'SYSTEM') badgeClass = "bg-amber-50 text-amber-700 border-amber-200 shadow-sm shadow-amber-100";
+
+                              const isError = log.level === 'ERROR';
+
+                              return (
+                                 <div key={log.id} className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-slate-50/80 transition-colors group items-start border-l-4 border-l-transparent hover:border-l-blue-500">
+                                    {/* DATE */}
+                                    <div className="col-span-2 flex flex-col justify-center">
+                                       <span className="font-bold text-slate-700 text-xs font-mono">{timeStr}</span>
+                                       <span className="text-[10px] text-slate-400 mt-0.5">{dateStr}</span>
+                                    </div>
+
+                                    {/* ACTOR */}
+                                    <div className="col-span-2 flex items-center gap-3 overflow-hidden">
+                                       <div className="w-8 h-8 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-[10px] font-bold text-slate-600 shrink-0">
+                                          {log.actor.substring(0, 2).toUpperCase()}
+                                       </div>
+                                       <div className="flex flex-col overflow-hidden">
+                                          <span className="text-xs font-bold text-slate-700 truncate" title={log.actor}>
+                                             {log.actor.split('@')[0]}
+                                          </span>
+                                          <span className="text-[9px] text-slate-400 truncate hidden xl:block">
+                                             {log.actor}
+                                          </span>
+                                       </div>
+                                    </div>
+
+                                    {/* ACTION */}
+                                    <div className="col-span-2 flex justify-center">
+                                       <span className={`inline-flex items-center justify-center px-3 py-1 rounded-md text-[10px] font-bold tracking-wide border w-24 text-center select-none uppercase ${badgeClass}`}>
+                                          {log.action}
+                                       </span>
+                                    </div>
+
+                                    {/* ENTITY */}
+                                    <div className="col-span-2 flex items-center">
+                                       <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded border border-slate-200">
+                                          {log.entity}
+                                       </span>
+                                    </div>
+
+                                    {/* DETAILS */}
+                                    <div className="col-span-4 text-xs leading-relaxed">
+                                       <p className={`font-semibold mb-1 ${isError ? 'text-red-600' : 'text-slate-800'}`}>
+                                          {log.message}
+                                       </p>
+                                       {log.details && (
+                                          <div className="font-mono text-[10px] text-slate-500 bg-slate-100 p-2 rounded border border-slate-200 break-all shadow-inner">
+                                             {log.details}
+                                          </div>
+                                       )}
+                                    </div>
+                                 </div>
+                              );
+                           })}
+                        </div>
+                     )}
+                  </div>
+
+                  <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-400 flex justify-between items-center">
+                     <span>Mostrando últimos {filteredLogs.length} registros</span>
+                     <span className="flex items-center gap-1 font-semibold text-slate-500"><Shield size={10} className="text-emerald-500" /> Auditoría Segura Activa</span>
+                  </div>
                </div>
             )}
          </div>
-
-         <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-400 flex justify-between items-center">
-            <span>Mostrando últimos {filteredLogs.length} registros</span>
-            <span className="flex items-center gap-1 font-semibold text-slate-500"><Shield size={10} className="text-emerald-500" /> Auditoría Segura Activa</span>
-         </div>
       </div>
-   )
-}
-
-         </div >
-      </div >
    );
 };
