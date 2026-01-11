@@ -53,7 +53,7 @@ export class AIAgentService {
             // --- BLOQUE GEMINI ---
             if (this.provider === 'GEMINI' && this.geminiClient) {
                 const model = this.geminiClient.getGenerativeModel({
-                    model: "gemini-1.5-flash", // gemini-2.0-flash es el más actual, usamos 1.5-flash por estabilidad o el que prefieras
+                    model: "gemini-3.0-flash-001", // gemini-2.0-flash es el más actual, usamos 1.5-flash por estabilidad o el que prefieras
                     systemInstruction: fullSystemPrompt,
                 });
 
@@ -88,7 +88,7 @@ export class AIAgentService {
                 ];
 
                 const response = await this.openai.chat.completions.create({
-                    model: "gpt-4o-mini", // gpt-4o-mini es el reemplazo robusto y económico de gpt-3.5/4-turbo
+                    model: "gpt-4.1-mini", // gpt-4o-mini es el reemplazo robusto y económico de gpt-3.5/4-turbo
                     messages: messages,
                     max_tokens: 500,
                     temperature: 0.7,
