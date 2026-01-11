@@ -28,6 +28,10 @@ interface DataContextType {
     setTransactions: React.Dispatch<React.SetStateAction<Transaction[]>>;
     setBankAccounts: React.Dispatch<React.SetStateAction<BankAccount[]>>;
     setSettings: React.Dispatch<React.SetStateAction<AppSettings | null>>;
+
+    // Phase 2: Deferred Loading
+    loadClientHistory: (clientId: string) => Promise<Transaction[]>;
+    historyLoading: boolean;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -43,7 +47,22 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [systemLogs, setSystemLogs] = useState<AppLog[]>([]);
 
     const [loading, setLoading] = useState(true);
+    const [historyLoading, setHistoryLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // --- PHASE 1: Local Cache Init ---
+    useEffect(() => {
+        if (!currentOrg) return;
+        const cached = localStorage.getItem(`settings_${currentOrg.id}`);
+        if (cached) {
+            try {
+                setSettings(JSON.parse(cached));
+                // We've found cached settings, we can potentially show a partial UI faster
+            } catch (e) {
+                console.error("Error parsing cached settings", e);
+            }
+        }
+    }, [currentOrg]);
 
     // --- HELPER: Add Log ---
     const addLog = useCallback((action: AppLog['action'], entity: AppLog['entity'], message: string, details?: string, level: AppLog['level'] = 'INFO') => {
@@ -63,7 +82,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const [settingsRes, clientsRes, txRes, banksRes, logsRes] = await Promise.all([
                 supabase.from('settings').select('*').eq('organization_id', currentOrg.id).limit(1).maybeSingle(),
                 supabase.from('clients').select('*').eq('organization_id', currentOrg.id).limit(2000),
-                supabase.from('transactions').select('*').eq('organization_id', currentOrg.id).limit(2000),
+                // Phase 2: Optimization - Vertical Slicing. Only select summary columns.
+                supabase.from('transactions')
+                    .select('id, organization_id, clientId, balanceAfter, interestPaid, date, type')
+                    .eq('organization_id', currentOrg.id)
+                    .limit(2000),
                 supabase.from('bank_accounts').select('*').eq('organization_id', currentOrg.id).limit(50),
                 supabase.from('audit_logs').select('*').eq('organization_id', currentOrg.id).order('created_at', { ascending: false }).limit(50)
             ]);
@@ -88,6 +111,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     apiKey: s.api_key || s.apiKey,
                     n8nWebhookUrl: s.n8n_webhook_url || s.n8nWebhookUrl,
                     maxCardLimit: s.max_card_limit || s.maxCardLimit || 500,
+                    // UI Config
+                    uiConfig: s.ui_config || s.uiConfig || {
+                        privacyMode: false,
+                        dashboardCards: { portfolio: true, profit: true, activeClients: true, quickPay: true },
+                        visibleColumns: ['card', 'name', 'profit', 'balance', 'dates', 'status']
+                    },
                     // AI Fields
                     aiProvider: s.ai_provider || s.aiProvider || 'GEMINI',
                     aiApiKey: s.ai_api_key || s.aiApiKey,
@@ -95,12 +124,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     aiSystemPrompt: s.ai_system_prompt || s.aiSystemPrompt
                 };
                 setSettings(mappedSettings);
+                // Save to cache
+                localStorage.setItem(`settings_${currentOrg.id}`, JSON.stringify(mappedSettings));
             } else {
                 setSettings({
                     companyName: currentOrg.name,
                     defaultInterestRate: 5,
                     useOpenAI: false,
                     maxCardLimit: 500,
+                    uiConfig: {
+                        privacyMode: false,
+                        dashboardCards: { portfolio: true, profit: true, activeClients: true, quickPay: true },
+                        visibleColumns: ['card', 'name', 'profit', 'balance', 'dates', 'status']
+                    },
                     aiProvider: 'GEMINI',
                     aiAgentName: 'LuchoBot'
                 } as AppSettings);
@@ -203,6 +239,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 apiKey: s.api_key || s.apiKey,
                                 n8nWebhookUrl: s.n8n_webhook_url || s.n8nWebhookUrl,
                                 maxCardLimit: s.max_card_limit || s.maxCardLimit || 500,
+                                // UI Config
+                                uiConfig: s.ui_config || s.uiConfig || {
+                                    privacyMode: false,
+                                    dashboardCards: { portfolio: true, profit: true, activeClients: true, quickPay: true },
+                                    visibleColumns: ['card', 'name', 'profit', 'balance', 'dates', 'status']
+                                },
                                 // AI Fields
                                 aiProvider: s.ai_provider || s.aiProvider || 'GEMINI',
                                 aiApiKey: s.ai_api_key || s.aiApiKey,
@@ -228,12 +270,56 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchData();
     }, [fetchData]);
 
+    const loadClientHistory = useCallback(async (clientId: string) => {
+        if (!currentOrg) return [];
+
+        // Find if we already have detailed tx for this client (checking for 'notes' presence as flag)
+        const existingTx = transactions.filter(t => t.clientId === clientId);
+        const hasDetails = existingTx.some(t => t.notes !== undefined);
+
+        if (hasDetails) return existingTx;
+
+        setHistoryLoading(true);
+        try {
+            console.log(`[DataContext] Loading detailed history for client: ${clientId}`);
+            const { data, error } = await supabase
+                .from('transactions')
+                .select('*')
+                .eq('clientId', clientId)
+                .order('date', { ascending: true });
+
+            if (error) throw error;
+
+            if (data) {
+                const detailedTx = data as Transaction[];
+                // Update the main transactions list by merging details
+                setTransactions(prev => {
+                    // Remove summary versions and add detailed versions
+                    const otherClientsTx = prev.filter(t => t.clientId !== clientId);
+                    return [...otherClientsTx, ...detailedTx];
+                });
+                return detailedTx;
+            }
+            return [];
+        } catch (err: any) {
+            console.error("Error loading client history:", err);
+            return [];
+        } finally {
+            setHistoryLoading(false);
+        }
+    }, [currentOrg, transactions]);
+
     // Initial Settings Default
     const safeSettings = useMemo(() => settings || {
         companyName: 'PrestaFlow',
         defaultInterestRate: 5,
         useOpenAI: false,
-        maxCardLimit: 500
+        maxCardLimit: 500,
+        uiConfig: {
+            privacyMode: false,
+            dashboardCards: { portfolio: true, profit: true, activeClients: true, quickPay: true },
+            visibleColumns: ['card', 'name', 'profit', 'balance', 'dates', 'status']
+        }
     }, [settings]);
 
     return (
@@ -251,7 +337,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setClients,
             setTransactions,
             setBankAccounts,
-            setSettings
+            setSettings,
+            loadClientHistory,
+            historyLoading
         }}>
             {children}
         </DataContext.Provider>

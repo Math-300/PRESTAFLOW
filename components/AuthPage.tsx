@@ -19,6 +19,7 @@ export const AuthPage: React.FC = () => {
       const inviteToken = params.get('invite');
       const inviteEmail = params.get('email');
       if (inviteToken) {
+         localStorage.setItem('prestaFlow_inviteToken', inviteToken);
          setIsLogin(false); // Switch to Register
          if (inviteEmail) setEmail(inviteEmail); // Pre-fill email
          setMessage("Has recibido una invitación segura. Regístrate para unirte.");

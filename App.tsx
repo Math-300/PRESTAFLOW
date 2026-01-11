@@ -5,23 +5,27 @@ import {
   Wifi, Loader2, AlertTriangle, RefreshCw, Building2, Menu
 } from 'lucide-react';
 import { Client, Transaction, TransactionType, AppSettings, BankAccount, AppLog, TransactionFormInput } from './types';
-import { ClientCard } from './components/ClientCard';
 import { TransactionModal } from './components/TransactionModal';
-import { AIChat } from './components/AIChat';
-import { BankDashboard } from './components/BankDashboard';
 import { ClientList } from './components/ClientList';
 import { Sidebar } from './components/Sidebar';
 import { ToastContainer, ToastMessage, ToastType } from './components/Toast';
-import { SettingsView } from './components/SettingsView';
 import { ClientFormModal } from './components/ClientFormModal';
+import { BottomNavbar } from './components/BottomNavbar';
+import { QuickPaySearch } from './components/QuickPaySearch';
 import { supabase, isConfigured } from './lib/supabaseClient';
 import { useDataOperations } from './hooks/useDataOperations';
 import { useAuth } from './contexts/AuthContext';
-import { AuthPage } from './components/AuthPage';
 import { useOrganization } from './contexts/OrganizationContext';
 import { useData } from './contexts/DataContext';
 import { generateId, parseCurrency } from './utils/format';
 import { calculateLoanProjection as calcProjection, calculateNextPaymentDate } from './services/loanUtils';
+
+// Phase 3: Code Splitting
+const ClientCard = React.lazy(() => import('./components/ClientCard').then(m => ({ default: m.ClientCard })));
+const BankDashboard = React.lazy(() => import('./components/BankDashboard').then(m => ({ default: m.BankDashboard })));
+const SettingsView = React.lazy(() => import('./components/SettingsView').then(m => ({ default: m.SettingsView })));
+const AuthPage = React.lazy(() => import('./components/AuthPage').then(m => ({ default: m.AuthPage })));
+const AIChat = React.lazy(() => import('./components/AIChat').then(m => ({ default: m.AIChat })));
 
 const App: React.FC = () => {
   // 1. Critical Configuration Check
@@ -51,7 +55,7 @@ const App: React.FC = () => {
   // Use Centralized Data Context
   const {
     clients, transactions, bankAccounts, settings, systemLogs, loading: dataLoading, error: dataError,
-    refreshData, setSettings
+    refreshData, setSettings, loadClientHistory, historyLoading
   } = useData();
 
   // --- Local UI State ---
@@ -65,6 +69,18 @@ const App: React.FC = () => {
 
   // Responsive Sidebar State
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Modals
   const [isTransModalOpen, setIsTransModalOpen] = useState(false);
@@ -76,6 +92,9 @@ const App: React.FC = () => {
 
   // Next Card Code State for Modal
   const [nextCardCode, setNextCardCode] = useState('');
+
+  // Global Quick Search
+  const [isQuickSearchOpen, setIsQuickSearchOpen] = useState(false);
 
   const addNotification = useCallback((message: string, type: ToastType) => {
     const id = Math.random().toString(36).substr(2, 9);
@@ -118,6 +137,30 @@ const App: React.FC = () => {
     return transactions.filter(t => t.clientId === activeClientId).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [transactions, activeClientId]);
 
+  // Global Balances for Quick Search
+  const clientBalances = useMemo(() => {
+    const balances: Record<string, { balance: number }> = {};
+    const txByClient: Record<string, Transaction[]> = {};
+
+    transactions.forEach(t => {
+      if (!txByClient[t.clientId]) txByClient[t.clientId] = [];
+      txByClient[t.clientId].push(t);
+    });
+
+    clients.forEach(c => {
+      const cTx = txByClient[c.id] || [];
+      const sorted = cTx.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      balances[c.id] = {
+        balance: sorted.length > 0 ? sorted[sorted.length - 1].balanceAfter : 0
+      };
+    });
+    return balances;
+  }, [clients, transactions]);
+
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
+  };
+
   // --- ACTIONS ---
 
   const handleDeleteClientWrapper = async (client: Client) => {
@@ -153,7 +196,8 @@ const App: React.FC = () => {
         ai_provider: newSettings.aiProvider,
         ai_agent_name: newSettings.aiAgentName,
         ai_api_key: newSettings.aiApiKey,
-        ai_system_prompt: newSettings.aiSystemPrompt
+        ai_system_prompt: newSettings.aiSystemPrompt,
+        ui_config: newSettings.uiConfig
       };
 
       const { data: existingRows } = await supabase
@@ -178,6 +222,7 @@ const App: React.FC = () => {
   const handleClientSelection = (id: string) => {
     setActiveClientId(id);
     setCurrentView('SINGLE_CLIENT');
+    loadClientHistory(id); // Phase 2: Lazy loading of details
   };
 
   const handleAddAccount = async (acc: BankAccount) => {
@@ -382,17 +427,24 @@ const App: React.FC = () => {
   if (authLoading || orgLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-900 flex-col gap-6">
-        <img src="/logo-dark.png" alt="PrestaFlow" className="h-20 w-auto object-contain animate-pulse" />
+        <img src="/icon-dark.png" alt="PrestaFlow" className="h-20 w-auto object-contain animate-pulse" />
         <div className="flex flex-col items-center gap-2">
           <Loader2 size={32} className="text-blue-500 animate-spin" />
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Iniciando sistema seguro...</p>
         </div>
       </div>
     );
   }
 
   if (!user) {
-    return <AuthPage />;
+    return (
+      <React.Suspense fallback={
+        <div className="flex items-center justify-center h-screen bg-slate-900">
+          <Loader2 size={32} className="text-blue-500 animate-spin" />
+        </div>
+      }>
+        <AuthPage />
+      </React.Suspense>
+    );
   }
 
   // --- FIRST TIME USER ONBOARDING ---
@@ -401,7 +453,7 @@ const App: React.FC = () => {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <ToastContainer toasts={toasts} removeToast={removeToast} />
         <div className="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 text-center animate-in zoom-in-95 border border-slate-200">
-          <img src="/logo-light.png" alt="PrestaFlow Logo" className="h-16 w-auto object-contain mx-auto mb-6" />
+          <img src="/icon-light.png" alt="PrestaFlow Logo" className="h-16 w-auto object-contain mx-auto mb-6" />
           <h2 className="text-2xl font-bold text-slate-800 mb-2">Bienvenido a PrestaFlow</h2>
           <p className="text-slate-500 mb-8">Para comenzar, crea tu primera organización o negocio corporativo.</p>
 
@@ -428,18 +480,6 @@ const App: React.FC = () => {
     );
   }
 
-  // --- LOADING SCREEN ---
-  // Only show if clients are empty to allow transparent refreshing
-  if (dataLoading && clients.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-slate-50 flex-col gap-4">
-        <Loader2 size={48} className="text-blue-600 animate-spin" />
-        <p className="text-slate-500 font-medium animate-pulse">
-          Sincronizando datos de {currentOrg?.name}...
-        </p>
-      </div>
-    );
-  }
 
   // --- ERROR SCREEN ---
   if (dataError) {
@@ -468,7 +508,7 @@ const App: React.FC = () => {
 
   // --- MAIN APP RENDER ---
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans relative">
+    <div className="flex h-[100dvh] bg-slate-50 overflow-hidden font-sans relative">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
 
       {/* Mobile Backdrop */}
@@ -488,8 +528,11 @@ const App: React.FC = () => {
         userRole={userRole}
       />
 
-      <div className="flex-1 flex flex-col h-screen overflow-hidden relative w-full">
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shadow-sm shrink-0 z-10">
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative w-full">
+        <header
+          className="h-auto min-h-[64px] bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shadow-sm shrink-0 z-10"
+          style={{ paddingTop: 'var(--safe-area-top)' }}
+        >
           <div className="flex items-center gap-3 overflow-hidden">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -524,9 +567,15 @@ const App: React.FC = () => {
 
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <div className="text-slate-400 text-xs italic hidden md:block">
-              <span className="px-2 py-1 rounded-full text-[10px] font-bold mr-2 border flex inline-flex items-center gap-1 bg-green-100 text-green-800 border-green-200">
-                <Wifi size={10} /> ONLINE
-              </span>
+              {isOnline ? (
+                <span className="px-2 py-1 rounded-full text-[10px] font-bold mr-2 border flex inline-flex items-center gap-1 bg-green-100 text-green-800 border-green-200">
+                  <Wifi size={10} /> ONLINE
+                </span>
+              ) : (
+                <span className="px-2 py-1 rounded-full text-[10px] font-bold mr-2 border flex inline-flex items-center gap-1 bg-red-100 text-red-800 border-red-200">
+                  <Wifi size={10} /> OFFLINE
+                </span>
+              )}
               {currentOrg?.name}
             </div>
 
@@ -540,58 +589,93 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-2 sm:p-6 overflow-hidden bg-slate-100 relative w-full">
-          {currentView === 'CLIENTS_LIST' && (
-            <ClientList
-              clients={clients}
-              transactions={transactions}
-              onSelectClient={handleClientSelection}
-              onNewClient={openNewClientModal}
-              onQuickAction={handleQuickAction}
-              n8nWebhookUrl={settings.n8nWebhookUrl}
-              onDeleteClient={handleDeleteClientWrapper}
-            />
-          )}
+        <main className="flex-1 p-4 sm:p-6 overflow-hidden bg-slate-100 relative flex flex-col">
+          {/* CONTENT AREA */}
+          <React.Suspense fallback={
+            <div className="flex-1 flex items-center justify-center bg-slate-50">
+              <div className="flex flex-col items-center gap-4">
+                <Loader2 size={40} className="text-blue-600 animate-spin" />
+                <p className="text-slate-400 font-medium animate-pulse uppercase tracking-widest text-[10px]">Cargando módulo...</p>
+              </div>
+            </div>
+          }>
+            {(currentView === 'CLIENTS_LIST' || currentView === 'DASHBOARD') && (
+              <ClientList
+                clients={clients}
+                transactions={transactions}
+                onSelectClient={handleClientSelection}
+                onNewClient={openNewClientModal}
+                onQuickAction={handleQuickAction}
+                n8nWebhookUrl={settings.n8nWebhookUrl}
+                onDeleteClient={handleDeleteClientWrapper}
+                isLoading={dataLoading}
+                settings={settings}
+                onOpenQuickSearch={() => setIsQuickSearchOpen(true)}
+                onRefresh={refreshData}
+              />
+            )}
 
-          {currentView === 'SINGLE_CLIENT' && activeClient && (
-            <ClientCard
-              client={activeClient}
-              transactions={activeTransactions}
-              allClients={clients}
-              onAddTransaction={openTransactionModal}
-              onBack={() => { setActiveClientId(null); setCurrentView('CLIENTS_LIST'); }}
-              onUpdateClient={handleUpdateClientWrapper}
-              onEditClient={openEditClientModal}
-              onCloseCredit={handleCloseCredit}
-              onDeleteClient={handleDeleteClientWrapper}
-              onDeleteTransaction={dataOps.deleteTransaction}
-              onEditTransaction={handleEditTransaction}
-            />
-          )}
+            {currentView === 'SINGLE_CLIENT' && activeClient && (
+              <ClientCard
+                client={activeClient}
+                transactions={activeTransactions}
+                allClients={clients}
+                onAddTransaction={openTransactionModal}
+                onBack={() => { setActiveClientId(null); setCurrentView('CLIENTS_LIST'); }}
+                onUpdateClient={handleUpdateClientWrapper}
+                onEditClient={openEditClientModal}
+                onCloseCredit={handleCloseCredit}
+                onDeleteClient={handleDeleteClientWrapper}
+                onDeleteTransaction={dataOps.deleteTransaction}
+                onEditTransaction={handleEditTransaction}
+                isLoadingDetails={historyLoading}
+              />
+            )}
 
-          {currentView === 'BANKS' && (
-            <BankDashboard
-              accounts={bankAccounts}
-              transactions={transactions}
-              onAddAccount={handleAddAccount}
-              onInternalMovement={dataOps.createBankMovement}
-            />
-          )}
+            {currentView === 'BANKS' && (
+              <BankDashboard
+                accounts={bankAccounts}
+                transactions={transactions}
+                onAddAccount={handleAddAccount}
+                onInternalMovement={dataOps.createBankMovement}
+                onRefresh={refreshData}
+              />
+            )}
 
-          {currentView === 'SETTINGS' && (
-            <SettingsView
-              settings={settings}
-              onUpdateSettings={updateSettings}
-              systemLogs={systemLogs}
-              onClearLogs={() => {/* DataContext doesn't allow clear yet */ }}
-              onAddNotification={addNotification}
-            />
-          )}
+            {currentView === 'SETTINGS' && (
+              <SettingsView
+                settings={settings}
+                onUpdateSettings={updateSettings}
+                systemLogs={systemLogs}
+                onClearLogs={() => {/* DataContext doesn't allow clear yet */ }}
+                onAddNotification={addNotification}
+              />
+            )}
+          </React.Suspense>
 
+          {/* BOTTOM PADDING FOR MOBILE NAV */}
+          <div className="md:hidden h-20 shrink-0" style={{ paddingBottom: 'var(--safe-area-bottom)' }} />
         </main>
       </div>
 
-      <AIChat activeClient={activeClient} transactions={activeTransactions} />
+      <BottomNavbar
+        currentView={currentView}
+        onChangeView={handleViewChange}
+        onQuickPay={() => setIsQuickSearchOpen(true)}
+      />
+
+      <QuickPaySearch
+        isOpen={isQuickSearchOpen}
+        onClose={() => setIsQuickSearchOpen(false)}
+        clients={clients}
+        clientMetrics={clientBalances}
+        onSelectClient={(client) => handleQuickAction(client, 'PAYMENT')}
+        formatCurrency={formatCurrency}
+      />
+
+      <React.Suspense fallback={null}>
+        <AIChat activeClient={activeClient} transactions={activeTransactions} />
+      </React.Suspense>
 
       <ClientFormModal
         isOpen={isClientModalOpen}

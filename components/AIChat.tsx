@@ -85,16 +85,23 @@ export const AIChat: React.FC<AIChatProps> = ({ activeClient, transactions }) =>
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 md:bottom-6 md:right-6 bg-slate-900 text-white p-2 md:p-4 rounded-full shadow-2xl hover:bg-slate-800 transition-all hover:scale-105 z-50 flex items-center gap-2 group"
+          className="fixed z-50 flex items-center gap-2 group transition-all hover:scale-105 active:scale-95 bg-slate-900 text-white p-3 md:p-4 rounded-full shadow-2xl hover:bg-slate-800"
+          style={{
+            bottom: 'calc(80px + var(--safe-area-bottom))',
+            right: '1rem'
+          }}
         >
-          <Bot className="w-5 h-5 md:w-6 md:h-6" />
-          <span className="font-bold pr-1 md:pr-2 text-[10px] md:text-base">{settings.aiAgentName || 'Asistente'}</span>
+          <Bot className="w-6 h-6" />
+          <span className="font-black pr-1 md:pr-2 text-xs md:text-base uppercase tracking-tight">{settings.aiAgentName || 'Asistente'}</span>
         </button>
       )}
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-0 right-0 w-full h-[80vh] md:bottom-6 md:right-6 md:w-96 md:h-[600px] bg-white md:rounded-2xl rounded-t-2xl shadow-2xl border border-slate-200 z-50 flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
+        <div
+          className="fixed bottom-0 right-0 w-full h-[90vh] md:bottom-6 md:right-6 md:w-96 md:h-[600px] bg-white md:rounded-2xl rounded-t-[32px] shadow-2xl border border-slate-200 z-50 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300"
+          style={{ paddingBottom: 'var(--safe-area-bottom)' }}
+        >
 
           {/* Header */}
           <div className="bg-slate-900 p-4 flex justify-between items-center text-white shrink-0">
@@ -146,22 +153,22 @@ export const AIChat: React.FC<AIChatProps> = ({ activeClient, transactions }) =>
 
           {/* Input */}
           <div className="p-3 bg-white border-t border-slate-200 shrink-0 pb-6 md:pb-3">
-            <div className="relative flex items-center">
+            <div className="relative flex items-center gap-2">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder={!settings.aiApiKey ? "Configura tu API Key primero..." : "Escribe un mensaje o instrucción..."}
+                placeholder={!settings.aiApiKey ? "Configura tu API Key primero..." : "Escribe un mensaje..."}
                 disabled={!settings.aiApiKey || isTyping}
-                className="w-full bg-slate-100 border-0 rounded-full pl-4 pr-12 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-slate-100 border-0 rounded-2xl pl-4 pr-12 py-3.5 text-base md:text-sm focus:ring-4 focus:ring-blue-100 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || isTyping}
-                className="absolute right-1 top-1 h-8 w-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-all disabled:opacity-0 disabled:scale-90 shadow-md"
+                className="absolute right-1 top-1 h-10 w-10 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-all disabled:opacity-0 disabled:scale-90 shadow-md active:scale-90"
               >
-                <Send size={14} />
+                <Send size={18} />
               </button>
             </div>
           </div>

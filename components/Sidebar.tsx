@@ -50,7 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, currentView
    return (
       <div className={containerClasses}>
          {/* HEADER / ORG SELECTOR */}
-         <div className="p-4 flex flex-col border-b border-slate-700 shrink-0 relative">
+         <div className="p-4 flex flex-col border-b border-slate-700 shrink-0 relative md:pt-4" style={{ paddingTop: 'calc(1rem + var(--safe-area-top))' }}>
             <div className="flex items-center justify-between h-12">
                {isOpen ? (
                   <div

@@ -110,7 +110,7 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
 
     const deleteClient = async (clientToDelete: Client) => {
         if (!validateConfig()) return false;
-        if (!hasPermission(userRole, 'DELETE_CLIENT')) {
+        if (!hasPermission(userRole, 'delete_clients')) {
             addNotification("No tienes permisos para eliminar clientes.", 'error');
             return false;
         }
@@ -141,7 +141,7 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
 
     const updateClient = async (updatedClient: Client) => {
         if (!validateConfig()) return false;
-        if (!hasPermission(userRole, 'EDIT_CLIENT')) {
+        if (!hasPermission(userRole, 'edit_clients')) {
             addNotification("No tienes permisos para editar datos sensibles.", 'error');
             return false;
         }
@@ -164,7 +164,7 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
 
     const createClient = async (newClient: Client, initialTransaction?: Transaction) => {
         if (!validateConfig()) return false;
-        if (!hasPermission(userRole, 'CREATE_CLIENT')) {
+        if (!hasPermission(userRole, 'create_clients')) {
             addNotification("No tienes permisos para crear clientes.", 'error');
             return false;
         }
@@ -201,7 +201,7 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
 
     const deleteTransaction = async (txToDelete: Transaction) => {
         if (!validateConfig()) return false;
-        if (!hasPermission(userRole, 'DELETE_TRANSACTION')) {
+        if (!hasPermission(userRole, 'delete_transactions')) {
             addNotification("Solo Propietarios pueden eliminar transacciones.", 'error');
             return false;
         }

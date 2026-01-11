@@ -144,6 +144,17 @@ export interface TransactionFormInput {
   redirectionWaitDays?: number;
 }
 
+export interface UIConfig {
+  privacyMode: boolean;
+  dashboardCards?: {
+    portfolio: boolean;
+    profit: boolean;
+    activeClients: boolean;
+    quickPay: boolean;
+  };
+  visibleColumns?: string[];
+}
+
 export interface AppSettings {
   id?: string; // UUID in DB
   organization_id?: string;
@@ -153,6 +164,9 @@ export interface AppSettings {
   apiKey?: string;
   n8nWebhookUrl?: string; // URL for mass messaging automation
   maxCardLimit?: number; // NEW: Maximum number of physical cards (e.g., 500)
+
+  // UI Configuration
+  uiConfig?: UIConfig;
 
   // AI Agent Configuration
   aiProvider?: 'GEMINI' | 'SUPABASE' | 'OPENAI';

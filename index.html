@@ -3,9 +3,13 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>PrestaFlow - Gestión de Cartera Inteligente</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="description"
     content="Plataforma profesional para la gestión de créditos, cobranza y recuperación de cartera con asistencia de IA." />
   <meta property="og:title" content="PrestaFlow Pro" />
@@ -14,6 +18,11 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    :root {
+      --safe-area-top: env(safe-area-inset-top, 0px);
+      --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
     /* Custom Scrollbar for professional feel */
     ::-webkit-scrollbar {
       width: 8px;
@@ -33,17 +42,24 @@
       background: #94a3b8;
     }
 
-    /* --- HIDE NUMBER SPINNERS (Las flechitas negras) --- */
-    /* Chrome, Safari, Edge, Opera */
+    /* --- HIDE NUMBER SPINNERS --- */
     input::-webkit-outer-spin-button,
     input::-webkit-inner-spin-button {
       -webkit-appearance: none;
+      appearance: none;
       margin: 0;
     }
 
     /* Firefox */
     input[type=number] {
       -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    /* Full viewport stability */
+    body {
+      height: 100dvh;
+      min-height: 100dvh;
     }
   </style>
   <script type="importmap">
