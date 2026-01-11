@@ -99,9 +99,10 @@ export const AIChat: React.FC<AIChatProps> = ({ activeClient, transactions }) =>
           {/* Header */}
           <div className="bg-slate-900 p-4 flex justify-between items-center text-white shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-blue-400 rounded-full flex items-center justify-center shadow-lg border-2 border-slate-800">
-                <Bot size={20} className="text-white" />
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-slate-800 overflow-hidden">
+                <img src="/icon-light.png" alt="AI" className="w-7 h-7 object-contain" />
               </div>
+
               <div className="leading-tight">
                 <h3 className="font-bold text-sm">{settings.aiAgentName || 'LuchoBot'}</h3>
                 <p className="text-[10px] text-blue-200 flex items-center gap-1">

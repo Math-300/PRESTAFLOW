@@ -381,9 +381,12 @@ const App: React.FC = () => {
   // --- AUTH & LOADING STATES ---
   if (authLoading || orgLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-900 flex-col gap-4">
-        <Loader2 size={48} className="text-blue-500 animate-spin" />
-        <p className="text-slate-400 font-medium">Iniciando sistema seguro...</p>
+      <div className="flex items-center justify-center h-screen bg-slate-900 flex-col gap-6">
+        <img src="/logo-dark.png" alt="PrestaFlow" className="h-20 w-auto object-contain animate-pulse" />
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 size={32} className="text-blue-500 animate-spin" />
+          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Iniciando sistema seguro...</p>
+        </div>
       </div>
     );
   }
@@ -397,12 +400,10 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <ToastContainer toasts={toasts} removeToast={removeToast} />
-        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 text-center animate-in zoom-in-95">
-          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Building2 size={32} />
-          </div>
+        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 text-center animate-in zoom-in-95 border border-slate-200">
+          <img src="/logo-light.png" alt="PrestaFlow Logo" className="h-16 w-auto object-contain mx-auto mb-6" />
           <h2 className="text-2xl font-bold text-slate-800 mb-2">Bienvenido a PrestaFlow</h2>
-          <p className="text-slate-500 mb-8">Para comenzar, crea tu primera organización o negocio.</p>
+          <p className="text-slate-500 mb-8">Para comenzar, crea tu primera organización o negocio corporativo.</p>
 
           <form onSubmit={handleCreateOrg} className="space-y-4">
             <div className="text-left">
