@@ -243,9 +243,34 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     fetchRole();
   }, [currentOrg, user]);
 
+  // INITIALIZATION LOGIC
   useEffect(() => {
-    fetchOrganizations();
-    checkAndClaimInvitations();
+    let mounted = true;
+
+    const init = async () => {
+      if (!user) {
+        if (mounted) {
+          setOrganizations([]);
+          setCurrentOrg(null);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      setIsLoading(true);
+
+      // 1. First, process any pending invitations (Critical for new users)
+      await checkAndClaimInvitations();
+
+      // 2. Then, fetch organizations knowing membership is up to date
+      await fetchOrganizations(true);
+
+      if (mounted) setIsLoading(false);
+    };
+
+    init();
+
+    return () => { mounted = false; };
   }, [user]);
 
   const switchOrganization = (orgId: string) => {

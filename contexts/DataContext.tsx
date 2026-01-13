@@ -72,7 +72,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // --- FETCHER ---
     const fetchData = useCallback(async () => {
-        if (!currentOrg) return;
+        if (!currentOrg) {
+            setLoading(false);
+            return;
+        }
 
         setLoading(true);
         setError(null);
