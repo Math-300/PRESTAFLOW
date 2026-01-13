@@ -26,6 +26,7 @@ const BankDashboard = React.lazy(() => import('./components/BankDashboard').then
 const SettingsView = React.lazy(() => import('./components/SettingsView').then(m => ({ default: m.SettingsView })));
 const AuthPage = React.lazy(() => import('./components/AuthPage').then(m => ({ default: m.AuthPage })));
 const AIChat = React.lazy(() => import('./components/AIChat').then(m => ({ default: m.AIChat })));
+const AuditLogModal = React.lazy(() => import('./components/AuditLogModal').then(m => ({ default: m.AuditLogModal })));
 
 const App: React.FC = () => {
   // 1. Critical Configuration Check
@@ -50,7 +51,7 @@ const App: React.FC = () => {
   }
 
   const { user, loading: authLoading, signOut } = useAuth();
-  const { currentOrg, isLoading: orgLoading, createOrganization, userRole } = useOrganization();
+  const { currentOrg, isLoading: orgLoading, createOrganization, userRole, can } = useOrganization();
 
   // Use Centralized Data Context
   const {
@@ -62,6 +63,7 @@ const App: React.FC = () => {
   const [showOrgCreator, setShowOrgCreator] = useState(false);
   const [newOrgName, setNewOrgName] = useState('');
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [isAuditOpen, setIsAuditOpen] = useState(false);
 
   // Navigation State
   const [activeClientId, setActiveClientId] = useState<string | null>(null);
@@ -123,14 +125,43 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // F1: Nuevo Cliente (Toggle)
       if (e.key === 'F1') {
         e.preventDefault();
-        openNewClientModal();
+        if (isClientModalOpen) {
+          setIsClientModalOpen(false);
+        } else {
+          openNewClientModal();
+        }
+      }
+
+      // F2: Cobro Rápido (Toggle)
+      if (e.key === 'F2') {
+        e.preventDefault();
+        setIsQuickSearchOpen(prev => !prev);
+      }
+
+      // F3: Auditoría (Toggle)
+      if (e.key === 'F3') {
+        e.preventDefault();
+        if (can('view_audit_logs')) {
+          setIsAuditOpen(prev => !prev);
+        } else {
+          addNotification("Seguridad: Acceso Denegado a Auditoría.", "error");
+        }
+      }
+
+      // Safety Escape
+      if (e.key === 'Escape') {
+        setIsClientModalOpen(false);
+        setIsQuickSearchOpen(false);
+        setIsAuditOpen(false);
+        setIsTransModalOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [bankAccounts, clients]);
+  }, [bankAccounts, clients, can, isClientModalOpen, isQuickSearchOpen, isAuditOpen, isTransModalOpen]);
 
   const activeClient = useMemo(() => clients.find(c => c.id === activeClientId) || null, [clients, activeClientId]);
   const activeTransactions = useMemo(() => {
@@ -675,6 +706,11 @@ const App: React.FC = () => {
 
       <React.Suspense fallback={null}>
         <AIChat activeClient={activeClient} transactions={activeTransactions} />
+        <AuditLogModal
+          isOpen={isAuditOpen}
+          onClose={() => setIsAuditOpen(false)}
+          logs={systemLogs}
+        />
       </React.Suspense>
 
       <ClientFormModal

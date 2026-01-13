@@ -220,6 +220,9 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
             const remainingTxs = transactions.filter(t => t.id !== txToDelete.id);
             await recalculateClientTransactions(txToDelete.clientId, remainingTxs);
 
+            const amountFmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(txToDelete.amount);
+            recordAudit('DELETE', 'TRANSACTION', `Transacción eliminada: ${amountFmt}`, `Tipo: ${txToDelete.type} | ID: ${txToDelete.id}`);
+
             addNotification("Transacción eliminada.", 'success');
             return true;
         } catch (error: any) {
@@ -272,6 +275,10 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
 
             await recalculateClientTransactions(activeClient.id, [...transactions, transactionData]);
 
+            const actionType = editingTransaction ? 'UPDATE' : 'CREATE';
+            const amountFmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(data.amount);
+            recordAudit(actionType, 'TRANSACTION', `${actionType === 'CREATE' ? 'Nueva' : 'Edición'} Transacción: ${amountFmt}`, `Cliente: ${activeClient.name} | Tipo: ${data.type}`);
+
             addNotification("Transacción procesada.", 'success');
             return true;
         } catch (error: any) {
@@ -307,6 +314,9 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
 
             const { createdAt: txCreated, ...safeTx } = tx as any;
             await supabase.from('transactions').insert({ ...safeTx, created_at: new Date(txCreated).toISOString() });
+
+            const amountFmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(amount);
+            recordAudit('CREATE', 'BANK', `Movimiento Bancario: ${amountFmt}`, `Cuenta: ${accountId} | Nota: ${note}`);
 
             addNotification("Movimiento registrado.", 'success');
             return true;

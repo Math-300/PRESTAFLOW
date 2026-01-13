@@ -101,16 +101,31 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  const fetchOrganizations = async () => {
+  /* 
+    Ref to track the last user ID we fetched for.
+    This prevents the "flicker" where the loading screen appears on every minor auth update.
+  */
+  const lastFetchedUserId = React.useRef<string | null>(null);
+
+  const fetchOrganizations = async (forceLoading = false) => {
     if (!user) {
       setOrganizations([]);
       setCurrentOrg(null);
       setIsLoading(false);
+      lastFetchedUserId.current = null;
       return;
     }
 
+    // If we've already fetched for this user, treat this as a background refresh
+    // unless explicitly forced (e.g. manual refresh button)
+    const isBackgroundRefresh = !forceLoading && lastFetchedUserId.current === user.id && organizations.length > 0;
+
     try {
-      setIsLoading(true);
+      if (!isBackgroundRefresh) {
+        setIsLoading(true);
+      }
+
+      lastFetchedUserId.current = user.id;
 
       // PRODUCTION QUERY: Fetch organizations via ownership OR membership
 
@@ -140,7 +155,8 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (allOrgIds.length === 0) {
         setOrganizations([]);
         setCurrentOrg(null);
-        setIsLoading(false);
+        // Only turn off loading if we turned it on
+        if (!isBackgroundRefresh) setIsLoading(false);
         return;
       }
 
@@ -155,22 +171,27 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       setOrganizations(orgs || []);
 
-      const storedOrgId = localStorage.getItem('prestaFlow_currentOrgId');
-      const foundStored = orgs?.find(o => o.id === storedOrgId);
+      // Logic to preserve selection or select default
+      if (!currentOrg) {
+        const storedOrgId = localStorage.getItem('prestaFlow_currentOrgId');
+        const foundStored = orgs?.find(o => o.id === storedOrgId);
 
-      if (foundStored) {
-        setCurrentOrg(foundStored);
-      } else if (orgs && orgs.length > 0) {
-        setCurrentOrg(orgs[0]);
-        localStorage.setItem('prestaFlow_currentOrgId', orgs[0].id);
-      } else {
-        setCurrentOrg(null);
+        if (foundStored) {
+          setCurrentOrg(foundStored);
+        } else if (orgs && orgs.length > 0) {
+          setCurrentOrg(orgs[0]);
+          localStorage.setItem('prestaFlow_currentOrgId', orgs[0].id);
+        }
       }
 
     } catch (error) {
       console.error('Error loading organizations:', error);
     } finally {
-      setIsLoading(false);
+      // Always ensure loading is false at the end, even if it was a background refresh 
+      // (safety net, though isBackgroundRefresh avoids the set(true))
+      if (!isBackgroundRefresh) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -447,7 +468,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   return (
     <OrganizationContext.Provider value={{
       organizations, currentOrg, members, invitations, userRole, permissions, isLoading,
-      can, createOrganization, switchOrganization, refreshOrganizations: fetchOrganizations,
+      can, createOrganization, switchOrganization, refreshOrganizations: () => fetchOrganizations(true),
       loadMembers, inviteMember, revokeInvitation, updateMemberRole, removeMember
     }}>
       {children}

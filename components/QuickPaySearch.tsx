@@ -85,15 +85,120 @@ export const QuickPaySearch: React.FC<QuickPaySearchProps> = ({
                 {/* Body */}
                 <div className="max-h-[60vh] overflow-y-auto bg-slate-50/50 p-3">
                     {searchTerm.trim() === '' ? (
-                        <div className="p-10 text-center text-slate-400 flex flex-col items-center gap-3">
-                            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 mb-2">
-                                <Zap size={32} />
-                            </div>
-                            <span className="text-sm font-medium">Inicia un "Cobro Rápido" buscando por nombre o tarjeta.</span>
-                            <div className="flex gap-2 mt-2">
-                                <kbd className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] shadow-sm font-bold text-slate-500 uppercase">Esc</kbd>
-                                <span className="text-[10px] text-slate-300 self-center">para cancelar</span>
-                            </div>
+                        <div className="space-y-4">
+                            {/* SMART SUGGESTIONS - Explicitly Requested Feature */}
+
+                            {/* 1. OVERDUE (Vencidos) */}
+                            {(() => {
+                                const today = new Date().toISOString().split('T')[0];
+                                const overdue = clients.filter(c =>
+                                    c.status === 'ACTIVE' &&
+                                    c.nextPaymentDate &&
+                                    c.nextPaymentDate < today
+                                ).sort((a, b) => (a.nextPaymentDate || '').localeCompare(b.nextPaymentDate || ''));
+
+                                if (overdue.length === 0) return null;
+
+                                return (
+                                    <div className="animate-in fade-in slide-in-from-left-2">
+                                        <h4 className="text-xs font-bold text-red-600 uppercase mb-2 flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                                            Pagos Atrasados ({overdue.length})
+                                        </h4>
+                                        <div className="grid gap-2">
+                                            {overdue.map(client => {
+                                                const metrics = clientMetrics[client.id] || { balance: 0 };
+                                                return (
+                                                    <button
+                                                        key={client.id}
+                                                        onClick={() => { onSelectClient(client); onClose(); }}
+                                                        className="w-full bg-red-50 p-3 rounded-xl border border-red-200 hover:border-red-400 hover:shadow-md transition-all flex justify-between items-center group text-left"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-mono font-bold text-red-600 border border-red-100 shadow-sm">
+                                                                {client.cardCode}
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-bold text-slate-900">{client.name}</h4>
+                                                                <div className="text-[10px] text-red-700 font-bold uppercase flex items-center gap-1">
+                                                                    Vence: {client.nextPaymentDate}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="text-md font-black text-slate-900">{formatCurrency(metrics.balance)}</div>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
+                            {/* 2. UPCOMING (Próximos) */}
+                            {(() => {
+                                const today = new Date().toISOString().split('T')[0];
+                                const futureDate = new Date();
+                                futureDate.setDate(futureDate.getDate() + 3); // Look ahead 3 days
+                                const futureIso = futureDate.toISOString().split('T')[0];
+
+                                const upcoming = clients.filter(c =>
+                                    c.status === 'ACTIVE' &&
+                                    c.nextPaymentDate &&
+                                    c.nextPaymentDate >= today &&
+                                    c.nextPaymentDate <= futureIso
+                                ).sort((a, b) => (a.nextPaymentDate || '').localeCompare(b.nextPaymentDate || ''));
+
+                                if (upcoming.length === 0) return null;
+
+                                return (
+                                    <div className="animate-in fade-in slide-in-from-left-3 duration-300 delay-100">
+                                        <h4 className="text-xs font-bold text-blue-600 uppercase mb-2 mt-4 flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                            Próximos Vencimientos
+                                        </h4>
+                                        <div className="grid gap-2">
+                                            {upcoming.map(client => {
+                                                const metrics = clientMetrics[client.id] || { balance: 0 };
+                                                const isToday = client.nextPaymentDate === today;
+                                                return (
+                                                    <button
+                                                        key={client.id}
+                                                        onClick={() => { onSelectClient(client); onClose(); }}
+                                                        className={`w-full p-3 rounded-xl border transition-all flex justify-between items-center group text-left shadow-sm
+                                                            ${isToday ? 'bg-orange-50 border-orange-200 hover:border-orange-400' : 'bg-white border-slate-200 hover:border-blue-400'}
+                                                        `}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-mono font-bold border shadow-sm ${isToday ? 'bg-white text-orange-600 border-orange-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                                                                {client.cardCode}
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-bold text-slate-900">{client.name}</h4>
+                                                                <div className={`text-[10px] font-bold uppercase flex items-center gap-1 ${isToday ? 'text-orange-600' : 'text-slate-400'}`}>
+                                                                    {isToday ? '¡PAGA HOY!' : `Vence: ${client.nextPaymentDate}`}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="text-md font-black text-slate-900">{formatCurrency(metrics.balance)}</div>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
+                            {/* Help Text if lists empty */}
+                            {clients.filter(c => c.status === 'ACTIVE').length === 0 && (
+                                <div className="p-10 text-center text-slate-400">
+                                    <Zap size={32} className="mx-auto mb-2 opacity-50" />
+                                    <p>No hay clientes activos para mostrar sugerencias.</p>
+                                </div>
+                            )}
                         </div>
                     ) : results.length === 0 ? (
                         <div className="p-10 text-center text-slate-400">

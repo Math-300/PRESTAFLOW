@@ -99,7 +99,7 @@ export const AIChat: React.FC<AIChatProps> = ({ activeClient, transactions }) =>
       {/* Chat Window */}
       {isOpen && (
         <div
-          className="fixed bottom-0 right-0 w-full h-[90vh] md:bottom-6 md:right-6 md:w-96 md:h-[600px] bg-white md:rounded-2xl rounded-t-[32px] shadow-2xl border border-slate-200 z-50 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300"
+          className="fixed bottom-0 right-0 w-full h-[90vh] md:bottom-6 md:right-6 md:w-96 md:h-[600px] bg-white md:rounded-2xl rounded-t-[32px] shadow-2xl border border-slate-200 z-50 flex flex-col overflow-hidden animate-chat-open"
           style={{ paddingBottom: 'var(--safe-area-bottom)' }}
         >
 

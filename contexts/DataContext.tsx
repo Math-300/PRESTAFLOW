@@ -214,17 +214,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 )
                 .on(
                     'postgres_changes',
-                    { event: '*', schema: 'public', table: 'bank_accounts', filter: `organization_id=eq.${currentOrg.id}` },
-                    (payload) => {
-                        if (payload.eventType === 'UPDATE') {
-                            setBankAccounts(prev => prev.map(b => b.id === payload.new.id ? { ...b, ...(payload.new as BankAccount) } : b));
-                        } else if (payload.eventType === 'INSERT') {
-                            setBankAccounts(prev => [...prev, payload.new as BankAccount]);
-                        }
-                    }
-                )
-                .on(
-                    'postgres_changes',
                     { event: '*', schema: 'public', table: 'settings', filter: `organization_id=eq.${currentOrg.id}` },
                     (payload) => {
                         if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
@@ -253,6 +242,30 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             };
                             setSettings(mappedSettings);
                         }
+                    }
+                )
+                // --- NEW: AUDIT LOGS REALTIME ---
+                .on(
+                    'postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'audit_logs', filter: `organization_id=eq.${currentOrg.id}` },
+                    (payload) => {
+                        const l = payload.new as any;
+                        const newLog: AppLog = {
+                            id: l.id,
+                            timestamp: l.created_at,
+                            displayTime: new Date(l.created_at).toLocaleTimeString(),
+                            level: l.level,
+                            message: l.message,
+                            actor: l.actor,
+                            action: l.action,
+                            entity: l.entity,
+                            details: l.details
+                        };
+                        setSystemLogs(prev => {
+                            // Avoid duplicates (if local optimistic update already added it)
+                            if (prev.find(log => log.id === newLog.id)) return prev;
+                            return [newLog, ...prev].slice(0, 100); // Keep last 100 realtime
+                        });
                     }
                 )
                 .subscribe();
