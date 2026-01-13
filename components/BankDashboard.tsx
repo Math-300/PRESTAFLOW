@@ -105,7 +105,7 @@ export const BankDashboard: React.FC<BankDashboardProps> = ({ accounts, transact
 
    return (
       <PullToRefresh onRefresh={onRefresh || (async () => { })}>
-         <div className="h-full overflow-y-auto p-2">
+         <div className="h-full overflow-y-auto p-2 pb-28 md:pb-2">
             {/* ... HEADER ... */}
             <div className="mb-6 bg-slate-900 text-white p-6 rounded-xl shadow-lg flex justify-between items-center" style={{ paddingTop: 'calc(1.5rem + var(--safe-area-top))' }}>
                <div>

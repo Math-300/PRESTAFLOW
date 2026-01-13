@@ -11,8 +11,11 @@ interface BottomNavbarProps {
 export const BottomNavbar: React.FC<BottomNavbarProps> = ({ currentView, onChangeView, onQuickPay }) => {
     return (
         <div
-            className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 flex items-stretch justify-around px-2 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]"
-            style={{ paddingBottom: 'var(--safe-area-bottom)', height: 'calc(64px + var(--safe-area-bottom))' }}
+            className="md:hidden fixed bottom-0 left-0 right-0 glass-effect z-40 flex items-stretch justify-around px-2 shadow-[0_-4px_30px_rgba(0,0,0,0.04)]"
+            style={{
+                paddingBottom: 'max(12px, var(--safe-area-bottom))',
+                height: 'calc(60px + max(12px, var(--safe-area-bottom)))'
+            }}
         >
             <button
                 onClick={() => onChangeView('CLIENTS_LIST')}

@@ -4,6 +4,7 @@ import {
   Users, Settings, LogOut, Plus, Landmark, Folder,
   Wifi, Loader2, AlertTriangle, RefreshCw, Building2, Menu
 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Client, Transaction, TransactionType, AppSettings, BankAccount, AppLog, TransactionFormInput } from './types';
 import { TransactionModal } from './components/TransactionModal';
 import { ClientList } from './components/ClientList';
@@ -457,10 +458,21 @@ const App: React.FC = () => {
   // --- AUTH & LOADING STATES ---
   if (authLoading || orgLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-900 flex-col gap-6">
-        <img src="/icon-dark.png" alt="PrestaFlow" className="h-20 w-auto object-contain animate-pulse" />
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 size={32} className="text-blue-500 animate-spin" />
+      <div
+        className="flex items-center justify-center h-screen bg-slate-900 flex-col gap-6"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100dvh',
+          backgroundColor: '#0f172a',
+          flexDirection: 'column',
+          gap: '1.5rem'
+        }}
+      >
+        <img src="/icon-dark.png" alt="PrestaFlow" className="h-20 w-auto object-contain animate-pulse" style={{ height: '5rem' }} />
+        <div className="flex flex-col items-center gap-2" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Loader2 size={32} className="text-blue-500 animate-spin" style={{ color: '#3b82f6' }} />
         </div>
       </div>
     );
@@ -561,7 +573,7 @@ const App: React.FC = () => {
 
       <div className="flex-1 flex flex-col h-full overflow-hidden relative w-full">
         <header
-          className="h-auto min-h-[64px] bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shadow-sm shrink-0 z-10"
+          className="h-auto min-h-[64px] bg-white/80 backdrop-blur-xl border-b border-slate-200/50 flex items-center justify-between px-4 sm:px-6 shadow-sm shrink-0 z-10 sticky top-0"
           style={{ paddingTop: 'var(--safe-area-top)' }}
         >
           <div className="flex items-center gap-3 overflow-hidden">
@@ -630,62 +642,100 @@ const App: React.FC = () => {
               </div>
             </div>
           }>
-            {(currentView === 'CLIENTS_LIST' || currentView === 'DASHBOARD') && (
-              <ClientList
-                clients={clients}
-                transactions={transactions}
-                onSelectClient={handleClientSelection}
-                onNewClient={openNewClientModal}
-                onQuickAction={handleQuickAction}
-                n8nWebhookUrl={settings.n8nWebhookUrl}
-                onDeleteClient={handleDeleteClientWrapper}
-                isLoading={dataLoading}
-                settings={settings}
-                onOpenQuickSearch={() => setIsQuickSearchOpen(true)}
-                onRefresh={refreshData}
-              />
-            )}
+            <AnimatePresence mode="wait" initial={false}>
+              {(currentView === 'CLIENTS_LIST' || currentView === 'DASHBOARD') && (
+                <motion.div
+                  key="CLIENTS_LIST"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full flex flex-col"
+                >
+                  <ClientList
+                    clients={clients}
+                    transactions={transactions}
+                    onSelectClient={handleClientSelection}
+                    onNewClient={openNewClientModal}
+                    onQuickAction={handleQuickAction}
+                    n8nWebhookUrl={settings.n8nWebhookUrl}
+                    onDeleteClient={handleDeleteClientWrapper}
+                    isLoading={dataLoading}
+                    settings={settings}
+                    onOpenQuickSearch={() => setIsQuickSearchOpen(true)}
+                    onRefresh={refreshData}
+                  />
+                </motion.div>
+              )}
 
-            {currentView === 'SINGLE_CLIENT' && activeClient && (
-              <ClientCard
-                client={activeClient}
-                transactions={activeTransactions}
-                allClients={clients}
-                onAddTransaction={openTransactionModal}
-                onBack={() => { setActiveClientId(null); setCurrentView('CLIENTS_LIST'); }}
-                onUpdateClient={handleUpdateClientWrapper}
-                onEditClient={openEditClientModal}
-                onCloseCredit={handleCloseCredit}
-                onDeleteClient={handleDeleteClientWrapper}
-                onDeleteTransaction={dataOps.deleteTransaction}
-                onEditTransaction={handleEditTransaction}
-                isLoadingDetails={historyLoading}
-              />
-            )}
+              {currentView === 'SINGLE_CLIENT' && activeClient && (
+                <motion.div
+                  key="SINGLE_CLIENT"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full flex flex-col"
+                >
+                  <ClientCard
+                    client={activeClient}
+                    transactions={activeTransactions}
+                    allClients={clients}
+                    onAddTransaction={openTransactionModal}
+                    onBack={() => { setActiveClientId(null); setCurrentView('CLIENTS_LIST'); }}
+                    onUpdateClient={handleUpdateClientWrapper}
+                    onEditClient={openEditClientModal}
+                    onCloseCredit={handleCloseCredit}
+                    onDeleteClient={handleDeleteClientWrapper}
+                    onDeleteTransaction={dataOps.deleteTransaction}
+                    onEditTransaction={handleEditTransaction}
+                    isLoadingDetails={historyLoading}
+                  />
+                </motion.div>
+              )}
 
-            {currentView === 'BANKS' && (
-              <BankDashboard
-                accounts={bankAccounts}
-                transactions={transactions}
-                onAddAccount={handleAddAccount}
-                onInternalMovement={dataOps.createBankMovement}
-                onRefresh={refreshData}
-              />
-            )}
+              {currentView === 'BANKS' && (
+                <motion.div
+                  key="BANKS"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full flex flex-col"
+                >
+                  <BankDashboard
+                    accounts={bankAccounts}
+                    transactions={transactions}
+                    onAddAccount={handleAddAccount}
+                    onInternalMovement={dataOps.createBankMovement}
+                    onRefresh={refreshData}
+                  />
+                </motion.div>
+              )}
 
-            {currentView === 'SETTINGS' && (
-              <SettingsView
-                settings={settings}
-                onUpdateSettings={updateSettings}
-                systemLogs={systemLogs}
-                onClearLogs={() => {/* DataContext doesn't allow clear yet */ }}
-                onAddNotification={addNotification}
-              />
-            )}
+              {currentView === 'SETTINGS' && (
+                <motion.div
+                  key="SETTINGS"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full flex flex-col"
+                >
+                  <SettingsView
+                    settings={settings}
+                    onUpdateSettings={updateSettings}
+                    systemLogs={systemLogs}
+                    onClearLogs={() => {/* DataContext doesn't allow clear yet */ }}
+                    onAddNotification={addNotification}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </React.Suspense>
 
           {/* BOTTOM PADDING FOR MOBILE NAV */}
-          <div className="md:hidden h-20 shrink-0" style={{ paddingBottom: 'var(--safe-area-bottom)' }} />
+
         </main>
       </div>
 

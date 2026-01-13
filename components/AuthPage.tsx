@@ -54,7 +54,20 @@ export const AuthPage: React.FC = () => {
    };
 
    return (
-      <div className="min-h-screen bg-slate-900 flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans">
+      <div
+         className="min-h-screen bg-slate-900 flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans"
+         style={{
+            minHeight: '100dvh',
+            backgroundColor: '#0f172a',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '1rem',
+            position: 'relative',
+            overflow: 'hidden'
+         }}
+      >
 
          {/* Background Decor */}
          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">

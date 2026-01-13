@@ -420,7 +420,7 @@ export const ClientList: React.FC<ClientListProps> = ({
             <div className="overflow-y-auto flex-1 scrollbar-thin">
 
               {/* MOBILE CARD LIST VIEW */}
-              <div className="md:hidden pb-20">
+              <div className="md:hidden pb-28">
                 <PullToRefresh onRefresh={onRefresh || (async () => { })}>
                   <div className="space-y-3 p-1">
                     {filteredClients.map(client => {
@@ -437,7 +437,7 @@ export const ClientList: React.FC<ClientListProps> = ({
                         >
                           <div
                             onClick={() => onSelectClient(client.id)}
-                            className={`bg-white p-4 rounded-xl border shadow-sm relative overflow-hidden active:scale-[0.98] transition-transform
+                            className={`bg-white p-4 rounded-2xl border shadow-sm relative overflow-hidden active:scale-[0.97] transition-all duration-150 ease-out
                             ${isLate ? 'border-l-4 border-l-red-500' : isWaitingFunds ? 'border-l-4 border-l-orange-500' : 'border-l-4 border-l-blue-500'}
                           `}
                           >
@@ -474,13 +474,13 @@ export const ClientList: React.FC<ClientListProps> = ({
                                 <>
                                   <button
                                     onClick={(e) => { e.stopPropagation(); onQuickAction(client, 'PAYMENT'); }}
-                                    className="flex-1 bg-green-50 text-green-700 py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-green-100 active:scale-95 transition-transform"
+                                    className="flex-1 bg-green-50 text-green-700 py-3.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-green-100 active:scale-[0.97] active:bg-green-100 transition-all duration-150 ease-out"
                                   >
                                     <DollarSign size={16} /> Abonar
                                   </button>
                                   <button
                                     onClick={(e) => { e.stopPropagation(); onQuickAction(client, 'DISBURSEMENT'); }}
-                                    className="flex-1 bg-blue-50 text-blue-700 py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-blue-100 active:scale-95 transition-transform"
+                                    className="flex-1 bg-blue-50 text-blue-700 py-3.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-blue-100 active:scale-[0.97] active:bg-blue-100 transition-all duration-150 ease-out"
                                   >
                                     <TrendingUp size={16} /> Prestar
                                   </button>

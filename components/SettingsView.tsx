@@ -209,7 +209,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             )}
          </div>
 
-         <div className="flex-1 space-y-6 pb-12 overflow-y-auto px-4 md:px-6 scrollbar-thin">
+         <div className="flex-1 space-y-6 pb-28 md:pb-12 overflow-y-auto px-4 md:px-6 scrollbar-thin">
 
             {/* TEAM TAB */}
             {activeTab === 'TEAM' && canManageTeam && (

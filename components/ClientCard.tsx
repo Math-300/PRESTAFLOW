@@ -11,6 +11,7 @@ import { EditableField } from './ui/EditableField';
 import { ClientStats } from './client/ClientStats';
 import { TransactionHistory } from './client/TransactionHistory';
 import { useOrganization } from '../contexts/OrganizationContext';
+import { motion } from 'framer-motion';
 
 interface ClientCardProps {
    client: Client;
@@ -68,14 +69,18 @@ export const ClientCard: React.FC<ClientCardProps> = ({
       <div className="flex flex-col h-full bg-slate-100 overflow-hidden relative">
 
          {/* 1. TOP HEADER & ACTIONS (STICKY) */}
-         <div className="bg-white border-b border-slate-200 shrink-0 shadow-sm z-20 relative">
+         <div className="glass-effect border-b border-slate-200 shrink-0 shadow-sm z-20 sticky top-0">
 
             {/* Top Bar: Nav + Main Status */}
             <div className="px-3 py-2 sm:px-6 sm:py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-4">
                <div className="flex items-center gap-2 w-full">
-                  <button onClick={onBack} className="p-2 -ml-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center">
+                  <motion.button
+                     onClick={onBack}
+                     whileTap={{ scale: 0.9 }}
+                     className="p-2 -ml-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center"
+                  >
                      <ArrowLeft size={20} />
-                  </button>
+                  </motion.button>
                   <div className="flex-1 overflow-hidden">
                      <EditableField
                         label="Nombre Cliente"
@@ -105,57 +110,62 @@ export const ClientCard: React.FC<ClientCardProps> = ({
                <div className="grid grid-cols-2 md:flex md:flex-wrap gap-1.5 w-full md:w-auto items-center">
                   {can('create_transactions') && (
                      <>
-                        <button
+                        <motion.button
                            onClick={() => onAddTransaction('PAYMENT')}
                            disabled={client.status === 'INACTIVE'}
+                           whileTap={{ scale: 0.95 }}
                            className="px-2 py-2.5 md:py-2 bg-green-600 hover:bg-green-700 text-white text-[13px] font-black md:font-bold rounded-xl md:rounded-lg shadow-md transition-all flex items-center justify-center gap-1 disabled:opacity-50 whitespace-nowrap"
                         >
                            <DollarSign size={16} /> Abonar
-                        </button>
+                        </motion.button>
 
-                        <button
+                        <motion.button
                            onClick={() => onAddTransaction('REDIRECT')}
                            disabled={client.status === 'INACTIVE'}
+                           whileTap={{ scale: 0.95 }}
                            className="px-2 py-2.5 md:py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-[13px] font-black md:font-bold rounded-xl md:rounded-lg shadow-md transition-all flex items-center justify-center gap-1 disabled:opacity-50 whitespace-nowrap"
                         >
                            <ArrowRightLeft size={16} /> Redirigir
-                        </button>
+                        </motion.button>
 
-                        <button
+                        <motion.button
                            onClick={() => onAddTransaction('DISBURSEMENT')}
                            disabled={client.status === 'INACTIVE' && currentBalance > 0}
+                           whileTap={{ scale: 0.95 }}
                            className="col-span-2 md:col-span-1 px-2 py-2.5 md:py-2 bg-slate-800 hover:bg-slate-900 text-white text-[13px] font-black md:font-bold rounded-xl md:rounded-lg shadow-md transition-all flex items-center justify-center gap-1 disabled:opacity-50 whitespace-nowrap"
                         >
                            <TrendingUp size={16} /> Prestar
-                        </button>
+                        </motion.button>
                      </>
                   )}
 
                   <div className="col-span-2 md:col-span-1 flex gap-2 ml-auto sm:ml-0 pl-1 border-t md:border-t-0 md:border-l border-slate-200 sm:border-0 sm:pl-0 pt-2 md:pt-0 w-full md:w-auto justify-end">
                      {onEditClient && can('edit_clients') && (
-                        <button
+                        <motion.button
                            type="button"
                            onClick={() => onEditClient(client)}
+                           whileTap={{ scale: 0.9 }}
                            className="p-3 text-blue-500 hover:bg-blue-50 rounded-xl transition-colors border border-slate-100 md:border-transparent hover:border-blue-200 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center bg-blue-50/30 md:bg-transparent"
                            title="Modificar Datos / Préstamo"
                         >
                            <Pencil size={20} />
-                        </button>
+                        </motion.button>
                      )}
 
                      {onDeleteClient && can('delete_clients') && (
-                        <button
+                        <motion.button
                            type="button"
                            onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               setDeletingItem({ type: 'CLIENT', data: client }); // OPEN MODAL
                            }}
+                           whileTap={{ scale: 0.9 }}
                            className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors border border-slate-100 md:border-transparent hover:border-red-200 cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center bg-red-50/30 md:bg-transparent"
                            title="Eliminar Cliente"
                         >
                            <Trash2 size={20} />
-                        </button>
+                        </motion.button>
                      )}
                   </div>
                </div>

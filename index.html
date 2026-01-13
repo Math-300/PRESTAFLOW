@@ -3,43 +3,134 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- ENHANCED VIEWPORT: Prevents accidental zoom on iOS while maintaining accessibility, adds cover fit -->
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>PrestaFlow - Gestión de Cartera Inteligente</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#0f172a" />
+
+  <!-- PWA iOS METAS -->
+  <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description"
-    content="Plataforma profesional para la gestión de créditos, cobranza y recuperación de cartera con asistencia de IA." />
+  <meta name="apple-mobile-web-app-title" content="PrestaFlow" />
+
+  <!-- Touch Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/icon-light.png" />
+
+  <!-- SEO & OG -->
+  <meta name="description" content="Plataforma profesional para la gestión de créditos y cobranza." />
   <meta property="og:title" content="PrestaFlow Pro" />
-  <meta property="og:description" content="Optimiza tu gestión financiera con PrestaFlow." />
+  <meta property="og:description" content="Gestión financiera inteligente." />
   <meta property="og:image" content="/logo-light.png" />
 
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* ============================================
+       PHASE 1: PHYSICS - Native Feel
+       ============================================ */
+
+    /* PREVENT RUBBER-BANDING (White bounce on edge scroll) */
+    html,
+    body {
+      overscroll-behavior-y: none;
+      overscroll-behavior-x: none;
+      -webkit-tap-highlight-color: transparent;
+      /* Remove grey tap highlight */
+    }
+
+    /* NATIVE SCROLL MOMENTUM on iOS */
+    * {
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      /* Hide scrollbars Firefox */
+      -ms-overflow-style: none;
+      /* Hide scrollbars IE/Edge */
+    }
+
+    /* Hide scrollbars Chrome/Safari/Webkit */
+    *::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* SYSTEM FONT STACK */
+    html {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* ============================================
+       CSS VARIABLES - Safe Areas & Core
+       ============================================ */
     :root {
       --safe-area-top: env(safe-area-inset-top, 0px);
       --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-area-left: env(safe-area-inset-left, 0px);
+      --safe-area-right: env(safe-area-inset-right, 0px);
     }
 
-    /* Custom Scrollbar for professional feel */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
+    /* Full viewport stability */
+    body {
+      height: 100dvh;
+      min-height: 100dvh;
+      width: 100%;
+      overflow: hidden;
+      /* Prevent body scroll, handle in containers */
+      background-color: #f8fafc;
+      /* Match light theme color */
+      user-select: none;
+      /* App-like feel, disable text selection mostly */
     }
 
-    ::-webkit-scrollbar-track {
-      background: #f1f5f9;
+    /* Allow text selection in specific inputs */
+    input,
+    textarea,
+    [contenteditable="true"] {
+      user-select: text;
     }
 
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 4px;
+    /* ============================================
+       PHASE 2: GLASSMORPHISM & ESTÉTICA
+       ============================================ */
+
+    /* Glass effect utility class for headers/modals */
+    .glass-effect {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background-color: rgba(255, 255, 255, 0.65);
+      /* More translucent for iOS feel */
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     }
 
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
+    .glass-effect-dark {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background-color: rgba(15, 23, 42, 0.75);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Smooth Transitions for Page Changes */
+    .page-enter {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+
+    .page-enter-active {
+      opacity: 1;
+      transform: translateX(0);
+      transition: opacity 300ms, transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .page-exit {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .page-exit-active {
+      opacity: 0;
+      transform: translateX(-20px);
+      transition: opacity 300ms, transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     /* --- HIDE NUMBER SPINNERS --- */
@@ -50,22 +141,23 @@
       margin: 0;
     }
 
-    /* Firefox */
     input[type=number] {
       -moz-appearance: textfield;
       appearance: textfield;
     }
 
-    /* Full viewport stability */
-    body {
-      height: 100dvh;
-      min-height: 100dvh;
+    @keyframes slideInChat {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
-    @keyframes slideInChat {
-      from { opacity: 0; transform: translateY(20px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
     .animate-chat-open {
       animation: slideInChat 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       transform-origin: bottom right;
@@ -86,7 +178,21 @@
 </script>
 </head>
 
-<body class="bg-slate-50 text-slate-900 font-sans antialiased overflow-hidden">
-  <div id="root"></div>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased overflow-hidden"
+  style="margin:0;padding:0;background:#0f172a;">
+  <div id="root">
+    <!-- Instant Loading State - Shown while JS loads, replaced when React mounts -->
+    <div id="initial-loader"
+      style="display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);flex-direction:column;gap:1.5rem;">
+      <div
+        style="width:48px;height:48px;border:3px solid rgba(59,130,246,0.3);border-top-color:#3b82f6;border-radius:50%;animation:spin 0.8s linear infinite;">
+      </div>
+      <p
+        style="color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:2px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+        Cargando PrestaFlow...</p>
+    </div>
+  </div>
   <script type="module" src="/index.tsx"></script>
 </body>
+
+</html>
