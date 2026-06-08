@@ -24,9 +24,16 @@ export default defineConfig(({ mode }) => {
       build: {
         rollupOptions: {
           output: {
-            // Separa recharts (pesado) en su propio chunk para carga independiente.
-            manualChunks: {
-              recharts: ['recharts'],
+            // Separa librerías pesadas en chunks propios: mejor caché (no se
+            // reconstruyen al cambiar código de app) y carga más paralela.
+            manualChunks(id) {
+              if (!id.includes('node_modules')) return;
+              if (id.includes('recharts') || id.includes('d3-')) return 'recharts';
+              if (id.includes('react-dom') || id.includes('/react/') || id.includes('scheduler')) return 'react';
+              if (id.includes('@supabase')) return 'supabase';
+              if (id.includes('framer-motion') || id.includes('motion-')) return 'motion';
+              if (id.includes('lucide-react')) return 'icons';
+              return 'vendor';
             },
           },
         },
