@@ -46,7 +46,12 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       const inviteToken = localStorage.getItem('prestaFlow_inviteToken');
 
-      let query = supabase.from('organization_invitations').select('*');
+      // Only pending, non-expired invitations are claimable
+      let query = supabase
+        .from('organization_invitations')
+        .select('*')
+        .eq('status', 'pending')
+        .gt('expires_at', new Date().toISOString());
 
       if (inviteToken) {
         query = query.eq('token', inviteToken);
@@ -213,7 +218,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           .select('id')
           .eq('organization_id', currentOrg.id)
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (member) {
           const perms = await fetchMemberPermissions(member.id);
@@ -403,8 +408,8 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const existingInvite = invitations.find(i => i.invited_email === normalizedEmail);
         if (existingInvite) return { success: false, error: "Ya existe una invitación pendiente." };
 
-        // Generate simple token
-        const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        // Generate cryptographically secure token (no Math.random — predictable)
+        const token = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
 
         const expirationDate = new Date();
         expirationDate.setDate(expirationDate.getDate() + 7);
@@ -479,7 +484,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Setup initial member as owner
       await supabase.from('organization_members').insert([{ organization_id: newOrg.id, user_id: user.id, role: 'owner' }]);
       // Setup initial settings
-      await supabase.from('settings').insert([{ organization_id: newOrg.id, companyName: name, defaultInterestRate: 10, useOpenAI: false }]);
+      await supabase.from('settings').insert([{ organization_id: newOrg.id, company_name: name, default_interest_rate: 10, use_openai: false }]);
 
       await fetchOrganizations();
       switchOrganization(newOrg.id);

@@ -47,11 +47,16 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
     };
 
     // --- HELPER: Bank Updates ---
-    const updateBankBalance = async (bankId: string, amountChange: number) => {
+    const updateBankBalance = async (bankId: string, amountChange: number, allowNegative = false) => {
         const bank = bankAccounts.find(b => b.id === bankId);
         if (!bank) return;
 
         const newBalance = bank.balance + amountChange;
+
+        // Evita dejar la cuenta en negativo (salvo reversiones explícitas).
+        if (!allowNegative && newBalance < 0) {
+            throw new Error("Fondos insuficientes en la cuenta para esta operación.");
+        }
 
         // Optimistic Update UI
         setBankAccounts(prev => prev.map(b => b.id === bankId ? { ...b, balance: newBalance } : b));
@@ -215,7 +220,8 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
             if (txToDelete.bankAccountId) {
                 const isOutgoing = [TransactionType.DISBURSEMENT, TransactionType.REFINANCE].includes(txToDelete.type as TransactionType);
                 const reversalAmount = isOutgoing ? txToDelete.amount : -(txToDelete.amount + (txToDelete.interestPaid || 0));
-                await updateBankBalance(txToDelete.bankAccountId, reversalAmount);
+                // Reversión: se permite saldo negativo para no bloquear el borrado.
+                await updateBankBalance(txToDelete.bankAccountId, reversalAmount, true);
             }
 
             const remainingTxs = transactions.filter(t => t.id !== txToDelete.id);
@@ -236,6 +242,23 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
 
     const saveTransaction = async (data: TransactionFormInput, activeClient: Client, editingTransaction: Transaction | null, receiptFile?: File | null) => {
         if (!validateConfig()) return false;
+
+        // Validación de rango: monto positivo, sin overflow, interés no negativo.
+        const amountNum = Number(data.amount);
+        const interestNum = Number(data.interest) || 0;
+        if (!Number.isFinite(amountNum) || amountNum <= 0) {
+            addNotification("El monto debe ser un número positivo.", 'error');
+            return false;
+        }
+        if (amountNum > 1_000_000_000_000) {
+            addNotification("El monto excede el límite permitido.", 'error');
+            return false;
+        }
+        if (!Number.isFinite(interestNum) || interestNum < 0) {
+            addNotification("El interés no puede ser negativo.", 'error');
+            return false;
+        }
+
         setIsOperationLoading(true);
 
         try {
@@ -292,6 +315,13 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
 
     const createBankMovement = async (accountId: string, amount: number, type: 'DEPOSIT' | 'WITHDRAWAL', note: string, receiptFile?: File | null) => {
         if (!validateConfig()) return false;
+
+        const amountNum = Number(amount);
+        if (!Number.isFinite(amountNum) || amountNum <= 0 || amountNum > 1_000_000_000_000) {
+            addNotification("El monto del movimiento debe ser un número positivo válido.", 'error');
+            return false;
+        }
+
         setIsOperationLoading(true);
 
         try {

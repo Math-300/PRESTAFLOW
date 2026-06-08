@@ -167,6 +167,15 @@ export const ClientList: React.FC<ClientListProps> = ({
       alert("⚠️ Error: No has configurado la URL del Webhook de n8n en Configuración.");
       return;
     }
+    // Validate the webhook is a well-formed HTTPS URL before sending client PII to it
+    let validatedWebhook: URL;
+    try {
+      validatedWebhook = new URL(n8nWebhookUrl);
+      if (validatedWebhook.protocol !== 'https:') throw new Error('protocol');
+    } catch {
+      alert("⚠️ Error: La URL del Webhook de n8n no es válida. Debe ser una URL HTTPS.");
+      return;
+    }
     if (lateClientsList.length === 0) {
       alert("No hay clientes en mora para notificar.");
       return;
@@ -195,7 +204,7 @@ export const ClientList: React.FC<ClientListProps> = ({
       };
 
       // Send to N8N
-      const response = await fetch(n8nWebhookUrl, {
+      const response = await fetch(validatedWebhook.toString(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

@@ -15,9 +15,12 @@ export const AuthPage: React.FC = () => {
 
    // Check for Invite Token in URL
    useEffect(() => {
-      const params = new URLSearchParams(window.location.search);
-      const inviteToken = params.get('invite');
-      const inviteEmail = params.get('email');
+      // Prefer the URL hash (no se envía al servidor ni queda en logs/Referer);
+      // se mantiene el query string como fallback para enlaces antiguos.
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const searchParams = new URLSearchParams(window.location.search);
+      const inviteToken = hashParams.get('invite') || searchParams.get('invite');
+      const inviteEmail = hashParams.get('email') || searchParams.get('email');
       if (inviteToken) {
          localStorage.setItem('prestaFlow_inviteToken', inviteToken);
          setIsLogin(false); // Switch to Register

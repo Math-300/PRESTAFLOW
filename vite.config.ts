@@ -6,7 +6,8 @@ import react from '@vitejs/plugin-react';
 // viven en `settings` (por organización) y se usan server-side vía Edge Function.
 // Las únicas variables expuestas al cliente son las VITE_SUPABASE_* (anon key,
 // pública por diseño y protegida por RLS).
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+    const isProd = mode === 'production';
     return {
       server: {
         port: 3000,
@@ -17,6 +18,18 @@ export default defineConfig(() => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
-      }
+      },
+      // En producción elimina console.* y debugger para no filtrar datos al navegador.
+      esbuild: isProd ? { drop: ['console', 'debugger'] } : {},
+      build: {
+        rollupOptions: {
+          output: {
+            // Separa recharts (pesado) en su propio chunk para carga independiente.
+            manualChunks: {
+              recharts: ['recharts'],
+            },
+          },
+        },
+      },
     };
 });

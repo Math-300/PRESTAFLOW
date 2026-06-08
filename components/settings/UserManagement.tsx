@@ -68,7 +68,8 @@ export const UserManagement: React.FC = () => {
     };
 
     const copyInviteLink = (token: string, emailForLink?: string) => {
-        let link = `${window.location.origin}?invite=${token}`;
+        // Token en el hash: no se envía al servidor ni queda en logs/Referer.
+        let link = `${window.location.origin}#invite=${token}`;
         if (emailForLink) link += `&email=${encodeURIComponent(emailForLink)}`;
         navigator.clipboard.writeText(link);
         alert("Enlace copiado al portapapeles. Envíalo al usuario.");
@@ -401,7 +402,7 @@ export const UserManagement: React.FC = () => {
                                     </p>
                                     <div className="flex gap-2">
                                         <code className="flex-1 bg-white border border-blue-200 p-2 rounded text-xs font-mono text-slate-600 truncate">
-                                            {window.location.origin}?invite={inviteResult.token}
+                                            {window.location.origin}#invite={inviteResult.token}
                                         </code>
                                         <button
                                             onClick={() => copyInviteLink(inviteResult.token!, inviteResult.email)}
