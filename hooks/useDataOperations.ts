@@ -96,8 +96,9 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
 
             if (uploadError) throw uploadError;
 
-            const { data } = supabase.storage.from('receipts').getPublicUrl(fileName);
-            return data.publicUrl;
+            // SEGURIDAD: el bucket es privado. Guardamos el PATH (no una URL
+            // pública permanente); al mostrar se genera una signed URL temporal.
+            return fileName;
         } catch (error: any) {
             addNotification(error.message, 'error');
             return null;

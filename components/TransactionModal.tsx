@@ -5,6 +5,7 @@ import { X, ArrowRightLeft, DollarSign, Calendar, Search, Landmark, AlertTriangl
 import { calculateLoanProjection } from '../services/loanUtils';
 import { formatNumberWithDots, parseCurrency, formatCurrency } from '../utils/format';
 import { compressImage } from '../utils/imageUtils';
+import { getReceiptSignedUrl } from '../utils/receipts';
 
 interface TransactionModalProps {
    isOpen: boolean;
@@ -113,8 +114,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             setDate(editingTransaction.date);
             setNotes(editingTransaction.notes || '');
             setNextPaymentDate(activeClient.nextPaymentDate || '');
+            // Guardamos el path original para conservarlo al guardar; el preview
+            // usa una signed URL temporal (bucket privado).
             setExistingReceiptUrl(editingTransaction.receiptUrl || '');
-            setReceiptPreview(editingTransaction.receiptUrl || '');
+            setReceiptPreview('');
+            if (editingTransaction.receiptUrl) {
+               getReceiptSignedUrl(editingTransaction.receiptUrl).then(u => setReceiptPreview(u || ''));
+            }
             setReceiptFile(null);
             setPaymentMode('CUSTOM');
 

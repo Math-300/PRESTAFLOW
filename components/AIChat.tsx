@@ -4,6 +4,7 @@ import { MessageCircle, X, Send, Bot, User, CheckCircle2, ShieldAlert } from 'lu
 import { Client, Transaction } from '../types';
 import { AIAgentService, ChatMessage } from '../services/aiAgentService';
 import { useData } from '../contexts/DataContext';
+import { useOrganization } from '../contexts/OrganizationContext';
 
 interface AIChatProps {
   activeClient: Client | null;
@@ -12,6 +13,7 @@ interface AIChatProps {
 
 export const AIChat: React.FC<AIChatProps> = ({ activeClient, transactions }) => {
   const { settings } = useData();
+  const { currentOrg } = useOrganization();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -22,13 +24,12 @@ export const AIChat: React.FC<AIChatProps> = ({ activeClient, transactions }) =>
 
   // FEATURE FLAG: Logic moved to return
 
-  // Initialize Agent Logic
+  // Initialize Agent Logic. La key vive server-side (Edge Function ai-chat);
+  // aquí solo pasamos la organización y el nombre del agente.
   useEffect(() => {
-    if (settings.aiApiKey) {
-      const systemPrompt = settings.aiSystemPrompt || "Eres un asistente útil.";
+    if (currentOrg?.id) {
       const agentName = settings.aiAgentName || "LuchoBot";
-      const provider = settings.aiProvider || 'GEMINI';
-      agentRef.current = new AIAgentService(settings.aiApiKey, systemPrompt, agentName, provider);
+      agentRef.current = new AIAgentService(currentOrg.id, agentName);
 
       setMessages([{
         role: 'model',
@@ -37,7 +38,7 @@ export const AIChat: React.FC<AIChatProps> = ({ activeClient, transactions }) =>
           : `Hola, soy ${agentName}. Sistema listo para consultas y gestión.`
       }]);
     }
-  }, [settings.aiApiKey, settings.aiSystemPrompt, settings.aiAgentName, settings.aiProvider, activeClient]);
+  }, [currentOrg?.id, settings.aiAgentName, activeClient]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -159,8 +160,8 @@ export const AIChat: React.FC<AIChatProps> = ({ activeClient, transactions }) =>
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder={!settings.aiApiKey ? "Configura tu API Key primero..." : "Escribe un mensaje..."}
-                disabled={!settings.aiApiKey || isTyping}
+                placeholder={isTyping ? "Pensando..." : "Escribe un mensaje..."}
+                disabled={isTyping}
                 className="flex-1 bg-slate-100 border-0 rounded-2xl pl-4 pr-12 py-3.5 text-base md:text-sm focus:ring-4 focus:ring-blue-100 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               />
               <button

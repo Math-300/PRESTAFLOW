@@ -351,11 +351,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                  <div>
                                     <DebouncedInput
                                        label="API Key (Google AI Studio)"
-                                       value={settings.aiApiKey || settings.apiKey || ''}
+                                       value={settings.aiApiKey || ''}
                                        onChange={(val) => onUpdateSettings({ ...settings, aiApiKey: val, apiKey: val })}
-                                       placeholder="AIzaSy..."
+                                       placeholder="•••••••• (deja en blanco para conservar la actual)"
                                        type="password"
-                                       helperText="Tu llave se guarda encriptada y segura. Nunca la compartas."
+                                       helperText="La llave se guarda en el servidor y nunca se descarga al navegador. Escribe una nueva solo si quieres cambiarla."
                                     />
                                  </div>
 

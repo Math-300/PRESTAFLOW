@@ -1,6 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import OpenAI from "openai";
-import { Client, Transaction } from "../types";
+import { supabase } from "../lib/supabaseClient";
 
 // --- TYPES ---
 export interface AIAction {
@@ -20,26 +18,15 @@ export interface ChatMessage {
 export type AIProvider = 'GEMINI' | 'SUPABASE' | 'OPENAI';
 
 // --- SERVICE ---
+// SEGURIDAD: este servicio ya NO recibe ni maneja la API key. Toda la llamada a
+// la IA pasa por la Edge Function `ai-chat`, que guarda la key server-side.
 export class AIAgentService {
-    private geminiClient: GoogleGenerativeAI | null = null;
-    private openai: OpenAI | null = null;
-    private systemPrompt: string;
+    private organizationId: string;
     private agentName: string;
-    private provider: AIProvider;
 
-    constructor(apiKey: string, systemPrompt: string, agentName: string, provider: AIProvider = 'GEMINI') {
-        this.systemPrompt = systemPrompt;
+    constructor(organizationId: string, agentName: string = 'Asistente') {
+        this.organizationId = organizationId;
         this.agentName = agentName;
-        this.provider = provider;
-
-        if (provider === 'GEMINI') {
-            this.geminiClient = new GoogleGenerativeAI(apiKey);
-        } else if (provider === 'OPENAI') {
-            this.openai = new OpenAI({
-                apiKey,
-                dangerouslyAllowBrowser: true
-            });
-        }
     }
 
     async sendMessage(
@@ -47,72 +34,28 @@ export class AIAgentService {
         newMessage: string,
         contextData?: string
     ): Promise<ChatMessage> {
-        const fullSystemPrompt = `${this.systemPrompt}\n\nTu nombre es ${this.agentName}.\n\nCONTEXTO ACTUAL DEL NEGOCIO:\n${contextData || 'Sin contexto adicional.'}`;
-
         try {
-            // --- BLOQUE GEMINI ---
-            if (this.provider === 'GEMINI' && this.geminiClient) {
-                const model = this.geminiClient.getGenerativeModel({
-                    model: "gemini-3.0-flash-001", // gemini-2.0-flash es el más actual, usamos 1.5-flash por estabilidad o el que prefieras
-                    systemInstruction: fullSystemPrompt,
-                });
+            const { data, error } = await supabase.functions.invoke('ai-chat', {
+                body: {
+                    organizationId: this.organizationId,
+                    history: history.filter(h => h.role !== 'system'),
+                    message: newMessage,
+                    context: contextData,
+                },
+            });
 
-                const chat = model.startChat({
-                    history: history
-                        .filter(h => h.role !== 'system')
-                        .map(h => ({
-                            role: h.role === 'model' ? 'model' : 'user',
-                            parts: [{ text: h.content }]
-                        })),
-                    generationConfig: {
-                        maxOutputTokens: 500,
-                        temperature: 0.7,
-                    },
-                });
-
-                const result = await chat.sendMessage(newMessage);
-                const response = result.response;
-
-                return { role: 'model', content: response.text() };
+            if (error) {
+                console.error('AI Agent invoke error:', error);
+                return { role: 'model', content: 'No se pudo contactar al asistente. Intenta de nuevo.' };
             }
 
-            // --- BLOQUE OPENAI ---
-            if (this.provider === 'OPENAI' && this.openai) {
-                const messages: any[] = [
-                    { role: 'system', content: fullSystemPrompt },
-                    ...history.map(h => ({
-                        role: h.role === 'model' ? 'assistant' : 'user',
-                        content: h.content
-                    })),
-                    { role: 'user', content: newMessage }
-                ];
-
-                const response = await this.openai.chat.completions.create({
-                    model: "gpt-4.1-mini", // gpt-4o-mini es el reemplazo robusto y económico de gpt-3.5/4-turbo
-                    messages: messages,
-                    max_tokens: 500,
-                    temperature: 0.7,
-                });
-
-                return {
-                    role: 'model',
-                    content: response.choices[0].message.content || "Sin respuesta de OpenAI."
-                };
-            }
-
-            return { role: 'model', content: "Proveedor no configurado correctamente." };
-
-        } catch (error: any) {
-            console.error(`AI Agent Error (${this.provider}):`, error);
-
-            if (error?.status === 401 || error?.error?.code === 401) {
-                return { role: 'model', content: "Error de autenticación: API Key inválida." };
-            }
-            if (error?.status === 429) {
-                return { role: 'model', content: "Error: Demasiadas peticiones (Rate Limit). Intenta en unos segundos." };
-            }
-
-            return { role: 'model', content: `Ocurrió un error procesando tu solicitud con ${this.provider}.` };
+            return {
+                role: 'model',
+                content: (data && data.content) ? data.content : 'Sin respuesta del asistente.',
+            };
+        } catch (err) {
+            console.error('AI Agent Error:', err);
+            return { role: 'model', content: 'Ocurrió un error procesando tu solicitud.' };
         }
     }
 }

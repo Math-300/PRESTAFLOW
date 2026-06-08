@@ -7,6 +7,7 @@ import {
    AlertTriangle, Trash2, Pencil, ExternalLink, X, Clock, ShieldCheck, Loader2
 } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
+import { getReceiptSignedUrl } from '../utils/receipts';
 import { EditableField } from './ui/EditableField';
 import { ClientStats } from './client/ClientStats';
 import { TransactionHistory } from './client/TransactionHistory';
@@ -328,7 +329,11 @@ export const ClientCard: React.FC<ClientCardProps> = ({
                   <TransactionHistory
                      transactions={transactions}
                      allClients={allClients}
-                     onViewReceipt={setViewingReceiptUrl}
+                     onViewReceipt={async (stored) => {
+                        // El bucket es privado: resolvemos una signed URL temporal.
+                        const signed = await getReceiptSignedUrl(stored);
+                        if (signed) setViewingReceiptUrl(signed);
+                     }}
                      onEditTransaction={can('create_transactions') ? onEditTransaction : undefined}
                      onDeleteTransaction={can('delete_transactions') ? (tx) => setDeletingItem({ type: 'TRANSACTION', data: tx }) : undefined}
                   />

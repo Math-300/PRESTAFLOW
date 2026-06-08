@@ -7,6 +7,7 @@ import {
     X, FileText, Calendar, CreditCard, Hash, Image as ImageIcon, ExternalLink
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/format';
+import { ReceiptImage } from '../ui/ReceiptImage';
 
 interface TransactionHistoryProps {
     transactions: Transaction[];
@@ -293,8 +294,8 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                                         onViewReceipt(selectedTx.receiptUrl!);
                                     }}
                                 >
-                                    <img
-                                        src={selectedTx.receiptUrl}
+                                    <ReceiptImage
+                                        stored={selectedTx.receiptUrl}
                                         alt="Soporte"
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                     />

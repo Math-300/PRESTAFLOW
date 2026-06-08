@@ -83,7 +83,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log(`[DataContext] Fetching for ${currentOrg.name}`);
 
             const [settingsRes, clientsRes, txRes, banksRes, logsRes] = await Promise.all([
-                supabase.from('settings').select('*').eq('organization_id', currentOrg.id).limit(1).maybeSingle(),
+                // SEGURIDAD: nunca traemos las columnas de keys (ai_api_key/api_key) al cliente.
+                supabase.from('settings').select('id, organization_id, company_name, default_interest_rate, use_openai, n8n_webhook_url, max_card_limit, ui_config, ai_provider, ai_agent_name, ai_system_prompt').eq('organization_id', currentOrg.id).limit(1).maybeSingle(),
                 supabase.from('clients').select('*').eq('organization_id', currentOrg.id).limit(2000),
                 // Phase 2: Optimization - Vertical Slicing. Only select summary columns.
                 supabase.from('transactions')
@@ -111,7 +112,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     companyName: s.company_name || s.companyName || currentOrg.name,
                     defaultInterestRate: s.default_interest_rate || s.defaultInterestRate || 5,
                     useOpenAI: s.use_openai || s.useOpenAI || false,
-                    apiKey: s.api_key || s.apiKey,
                     n8nWebhookUrl: s.n8n_webhook_url || s.n8nWebhookUrl,
                     maxCardLimit: s.max_card_limit || s.maxCardLimit || 500,
                     // UI Config
@@ -120,9 +120,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         dashboardCards: { portfolio: true, profit: true, activeClients: true, quickPay: true },
                         visibleColumns: ['card', 'name', 'profit', 'balance', 'dates', 'status']
                     },
-                    // AI Fields
+                    // AI Fields (la key NO viaja al cliente; vive server-side)
                     aiProvider: s.ai_provider || s.aiProvider || 'GEMINI',
-                    aiApiKey: s.ai_api_key || s.aiApiKey,
                     aiAgentName: s.ai_agent_name || s.aiAgentName || 'LuchoBot',
                     aiSystemPrompt: s.ai_system_prompt || s.aiSystemPrompt
                 };
@@ -228,7 +227,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 companyName: s.company_name || s.companyName || 'PrestaFlow',
                                 defaultInterestRate: s.default_interest_rate || s.defaultInterestRate || 5,
                                 useOpenAI: s.use_openai || s.useOpenAI || false,
-                                apiKey: s.api_key || s.apiKey,
                                 n8nWebhookUrl: s.n8n_webhook_url || s.n8nWebhookUrl,
                                 maxCardLimit: s.max_card_limit || s.maxCardLimit || 500,
                                 // UI Config
@@ -237,9 +235,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                     dashboardCards: { portfolio: true, profit: true, activeClients: true, quickPay: true },
                                     visibleColumns: ['card', 'name', 'profit', 'balance', 'dates', 'status']
                                 },
-                                // AI Fields
+                                // AI Fields (la key NO viaja al cliente; vive server-side)
                                 aiProvider: s.ai_provider || s.aiProvider || 'GEMINI',
-                                aiApiKey: s.ai_api_key || s.aiApiKey,
                                 aiAgentName: s.ai_agent_name || s.aiAgentName || 'LuchoBot',
                                 aiSystemPrompt: s.ai_system_prompt || s.aiSystemPrompt
                             };

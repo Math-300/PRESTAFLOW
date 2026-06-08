@@ -217,20 +217,28 @@ const App: React.FC = () => {
       const { id, ...cleanPayload } = newSettings as any;
 
       // MAPPING to Snake Case for DB
-      const dbPayload = {
+      const dbPayload: Record<string, any> = {
         organization_id: currentOrg.id,
         company_name: newSettings.companyName,
         default_interest_rate: newSettings.defaultInterestRate,
         use_openai: newSettings.useOpenAI,
-        api_key: newSettings.apiKey,
         n8n_webhook_url: newSettings.n8nWebhookUrl,
         max_card_limit: newSettings.maxCardLimit,
         ai_provider: newSettings.aiProvider,
         ai_agent_name: newSettings.aiAgentName,
-        ai_api_key: newSettings.aiApiKey,
         ai_system_prompt: newSettings.aiSystemPrompt,
         ui_config: newSettings.uiConfig
       };
+
+      // SEGURIDAD: las API keys NO se cargan al cliente. Solo se escriben si el
+      // usuario realmente ingresó una nueva (campo no vacío). En blanco => se
+      // conserva la key existente en la BD (no se sobreescribe con null).
+      if (newSettings.aiApiKey && newSettings.aiApiKey.trim()) {
+        dbPayload.ai_api_key = newSettings.aiApiKey.trim();
+      }
+      if (newSettings.apiKey && newSettings.apiKey.trim()) {
+        dbPayload.api_key = newSettings.apiKey.trim();
+      }
 
       const { data: existingRows } = await supabase
         .from('settings')
