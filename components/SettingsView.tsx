@@ -6,6 +6,88 @@ import { UserManagement } from './settings/UserManagement';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { useAuth } from '../contexts/AuthContext';
 
+// Helper component for debounced input — defined at module level to avoid recreation on each render
+const DebouncedInput: React.FC<{
+   label: string;
+   value: string;
+   onChange: (value: string) => void;
+   placeholder?: string;
+   type?: string;
+   helperText?: string;
+}> = ({ label, value, onChange, placeholder, type = 'text', helperText }) => {
+   const [inputValue, setInputValue] = useState(value);
+
+   useEffect(() => {
+      setInputValue(value);
+   }, [value]);
+
+   useEffect(() => {
+      const handler = setTimeout(() => {
+         if (inputValue !== value) {
+            onChange(inputValue);
+         }
+      }, 500); // 500ms debounce
+
+      return () => {
+         clearTimeout(handler);
+      };
+   }, [inputValue, onChange, value]);
+
+   return (
+      <div>
+         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{label}</label>
+         <input
+            type={type}
+            className="w-full border border-slate-300 bg-white text-slate-900 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
+            placeholder={placeholder}
+            value={inputValue}
+            onChange={e => setInputValue(e.target.value)}
+         />
+         {helperText && <p className="text-xs text-slate-400 mt-1">{helperText}</p>}
+      </div>
+   );
+};
+
+// Helper component for debounced textarea — defined at module level to avoid recreation on each render
+const DebouncedTextArea: React.FC<{
+   label?: string;
+   value: string;
+   onChange: (value: string) => void;
+   placeholder?: string;
+   helperText?: string;
+}> = ({ label, value, onChange, placeholder, helperText }) => {
+   const [textareaValue, setTextareaValue] = useState(value);
+
+   useEffect(() => {
+      setTextareaValue(value);
+   }, [value]);
+
+   useEffect(() => {
+      const handler = setTimeout(() => {
+         if (textareaValue !== value) {
+            onChange(textareaValue);
+         }
+      }, 500); // 500ms debounce
+
+      return () => {
+         clearTimeout(handler);
+      };
+   }, [textareaValue, onChange, value]);
+
+   return (
+      <div>
+         {label && <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{label}</label>}
+         <textarea
+            className="w-full border border-slate-300 bg-white text-slate-900 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm min-h-[150px]"
+            placeholder={placeholder}
+            value={textareaValue}
+            onChange={e => setTextareaValue(e.target.value)}
+         />
+         {helperText && <p className="text-xs text-slate-400 mt-1">{helperText}</p>}
+      </div>
+   );
+};
+
 const DEFAULT_SYSTEM_PROMPT = `Eres "LuchoBot", el Asistente de Gestión Financiera y Cartera.
 Tu objetivo es gestionar la recuperación de cartera y asistir a los clientes con sus pagos.
 Tu tono es: **Profesional, Firme, Respetuoso y Conciso**.
@@ -34,6 +116,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
    onAddNotification
 }) => {
    const { userRole, can, loadMembers } = useOrganization();
+   const { user, updateProfile } = useAuth();
    const [tempBusinessName, setTempBusinessName] = useState(settings.companyName);
    const [activeTab, setActiveTab] = useState<'GENERAL' | 'TEAM' | 'VIEW' | 'AUDIT'>('GENERAL');
 
@@ -79,88 +162,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             ...updates
          }
       });
-   };
-
-   // Helper component for debounced input
-   const DebouncedInput: React.FC<{
-      label: string;
-      value: string;
-      onChange: (value: string) => void;
-      placeholder?: string;
-      type?: string;
-      helperText?: string;
-   }> = ({ label, value, onChange, placeholder, type = 'text', helperText }) => {
-      const [inputValue, setInputValue] = useState(value);
-
-      useEffect(() => {
-         setInputValue(value);
-      }, [value]);
-
-      useEffect(() => {
-         const handler = setTimeout(() => {
-            if (inputValue !== value) {
-               onChange(inputValue);
-            }
-         }, 500); // 500ms debounce
-
-         return () => {
-            clearTimeout(handler);
-         };
-      }, [inputValue, onChange, value]);
-
-      return (
-         <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{label}</label>
-            <input
-               type={type}
-               className="w-full border border-slate-300 bg-white text-slate-900 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
-               placeholder={placeholder}
-               value={inputValue}
-               onChange={e => setInputValue(e.target.value)}
-            />
-            {helperText && <p className="text-xs text-slate-400 mt-1">{helperText}</p>}
-         </div>
-      );
-   };
-
-   // Helper component for debounced textarea
-   const DebouncedTextArea: React.FC<{
-      label?: string;
-      value: string;
-      onChange: (value: string) => void;
-      placeholder?: string;
-      helperText?: string;
-   }> = ({ label, value, onChange, placeholder, helperText }) => {
-      const [textareaValue, setTextareaValue] = useState(value);
-
-      useEffect(() => {
-         setTextareaValue(value);
-      }, [value]);
-
-      useEffect(() => {
-         const handler = setTimeout(() => {
-            if (textareaValue !== value) {
-               onChange(textareaValue);
-            }
-         }, 500); // 500ms debounce
-
-         return () => {
-            clearTimeout(handler);
-         };
-      }, [textareaValue, onChange, value]);
-
-      return (
-         <div>
-            {label && <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{label}</label>}
-            <textarea
-               className="w-full border border-slate-300 bg-white text-slate-900 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm min-h-[150px]"
-               placeholder={placeholder}
-               value={textareaValue}
-               onChange={e => setTextareaValue(e.target.value)}
-            />
-            {helperText && <p className="text-xs text-slate-400 mt-1">{helperText}</p>}
-         </div>
-      );
    };
 
    return (
@@ -388,9 +389,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         <div className="space-y-4">
                            <DebouncedInput
                               label="Nombre para Mostrar"
-                              value={useAuth().user?.user_metadata?.full_name || ''}
+                              value={user?.user_metadata?.full_name || ''}
                               onChange={async (val) => {
-                                 const { error } = await useAuth().updateProfile({ full_name: val });
+                                 const { error } = await updateProfile({ full_name: val });
                                  if (!error) {
                                     onAddNotification("Nombre de perfil actualizado", "success");
                                     loadMembers();
