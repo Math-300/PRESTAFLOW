@@ -208,7 +208,11 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
             if (clientError) throw clientError;
 
             if (initialTransaction) {
-                const txWithOrg = { ...initialTransaction, organization_id: orgId, created_at: new Date().toISOString() };
+                // Quitar createdAt (camelCase) antes de insertar: la tabla transactions
+                // usa created_at (snake). Si se filtra, PostgREST devuelve 400 y el
+                // desembolso inicial del cliente nuevo no se registra.
+                const { createdAt: _initTxCreated, ...initialTxClean } = initialTransaction as any;
+                const txWithOrg = { ...initialTxClean, organization_id: orgId, created_at: new Date().toISOString() };
                 const { error: txError } = await supabase.from('transactions').insert(txWithOrg);
                 if (txError) throw txError;
 
