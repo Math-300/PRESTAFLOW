@@ -253,6 +253,22 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         }
                     }
                 )
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'bank_accounts', filter: `organization_id=eq.${currentOrg.id}` },
+                    (payload) => {
+                        if (payload.eventType === 'INSERT') {
+                            setBankAccounts(prev => {
+                                if (prev.find(b => b.id === payload.new.id)) return prev; // Dedupe
+                                return [...prev, payload.new as BankAccount];
+                            });
+                        } else if (payload.eventType === 'UPDATE') {
+                            setBankAccounts(prev => prev.map(b => b.id === payload.new.id ? { ...b, ...(payload.new as BankAccount) } : b));
+                        } else if (payload.eventType === 'DELETE') {
+                            setBankAccounts(prev => prev.filter(b => b.id !== payload.old.id));
+                        }
+                    }
+                )
                 // --- NEW: AUDIT LOGS REALTIME ---
                 .on(
                     'postgres_changes',
