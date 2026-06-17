@@ -415,6 +415,9 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
         setIsOperationLoading(true);
 
         try {
+            let receiptPath: string | undefined;
+            if (receiptFile) { const uploaded = await uploadReceipt(receiptFile); if (uploaded) receiptPath = uploaded; }
+
             const movementType = type === 'DEPOSIT' ? 1 : -1;
             await updateBankBalance(accountId, amount * movementType);
 
@@ -430,6 +433,7 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
                 balanceAfter: 0,
                 notes: note,
                 bankAccountId: accountId,
+                receiptUrl: receiptPath,
                 createdAt: Date.now()
             };
 
