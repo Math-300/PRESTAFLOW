@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Users, Settings, LogOut, Plus, Landmark, Folder,
-  Wifi, Loader2, AlertTriangle, RefreshCw, Building2, Menu
+  Wifi, Loader2, AlertTriangle, RefreshCw, Building2, Menu, Sun, Moon
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Client, Transaction, TransactionType, AppSettings, BankAccount, AppLog, TransactionFormInput } from './types';
@@ -198,6 +198,21 @@ const App: React.FC = () => {
 
   // Modo Privado (org): oculta todo el dinero y la sección de Tesorería/Bancos.
   const hideMoney = settings?.uiConfig?.privacyMode === true;
+
+  // Modo Oscuro (preferencia por dispositivo, persistida en localStorage).
+  const [isDark, setIsDark] = useState<boolean>(
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+  );
+  const toggleTheme = useCallback(() => {
+    setIsDark(prev => {
+      const next = !prev;
+      try {
+        document.documentElement.classList.toggle('dark', next);
+        localStorage.setItem('prestaFlow_theme', next ? 'dark' : 'light');
+      } catch (e) { /* noop */ }
+      return next;
+    });
+  }, []);
 
   // --- ACTIONS ---
 
@@ -638,6 +653,15 @@ const App: React.FC = () => {
               )}
               {currentOrg?.name}
             </div>
+
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title={isDark ? 'Modo claro' : 'Modo oscuro'}
+              aria-label="Cambiar tema"
+            >
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
 
             <button
               onClick={signOut}
