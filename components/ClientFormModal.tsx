@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Pencil, Plus, X, UserPlus, Check, Calculator, Save, Landmark, RefreshCw, AlertCircle, LayoutGrid } from 'lucide-react';
 import { Client, BankAccount } from '../types';
 import { getToday, formatNumberWithDots, formatCurrency, formatCurrencyMasked } from '../utils/format';
@@ -53,6 +53,19 @@ export const ClientFormModal: React.FC<ClientFormModalProps> = ({
    });
 
    const [showAvailableGaps, setShowAvailableGaps] = useState(false);
+   const gapsRef = useRef<HTMLDivElement>(null);
+
+   // Cerrar el popover "Ver Libres" al hacer clic fuera de él.
+   useEffect(() => {
+      if (!showAvailableGaps) return;
+      const handleOutside = (e: MouseEvent) => {
+         if (gapsRef.current && !gapsRef.current.contains(e.target as Node)) {
+            setShowAvailableGaps(false);
+         }
+      };
+      document.addEventListener('mousedown', handleOutside);
+      return () => document.removeEventListener('mousedown', handleOutside);
+   }, [showAvailableGaps]);
 
    // Initialization Effect
    useEffect(() => {
@@ -233,7 +246,7 @@ export const ClientFormModal: React.FC<ClientFormModalProps> = ({
                </div>
 
                <div className="grid grid-cols-3 gap-3 md:gap-4">
-                  <div className="relative">
+                  <div className="relative" ref={gapsRef}>
                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1 flex justify-between">
                         Tarjeta N°
                         <button
