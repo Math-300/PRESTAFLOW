@@ -38,14 +38,24 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({ children, onRefres
     };
 
     const onTouchEnd = async () => {
-        isDragging.current = false;
         if (pullOffset >= threshold) {
             setIsRefreshing(true);
             setPullOffset(threshold);
             if ('vibrate' in navigator) navigator.vibrate([10, 30, 10]); // Subtle haptic pattern
-            await onRefresh();
-            setIsRefreshing(false);
+            try {
+                await onRefresh();
+            } finally {
+                setIsRefreshing(false);
+                setPullOffset(0);
+            }
+        } else {
+            setPullOffset(0);
         }
+        isDragging.current = false;
+    };
+
+    const onTouchCancel = () => {
+        isDragging.current = false;
         setPullOffset(0);
     };
 
@@ -55,6 +65,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({ children, onRefres
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
+            onTouchCancel={onTouchCancel}
         >
             {/* Pull Indicator */}
             <div
