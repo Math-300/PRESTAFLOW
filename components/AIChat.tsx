@@ -26,19 +26,20 @@ export const AIChat: React.FC<AIChatProps> = ({ activeClient, transactions }) =>
 
   // Initialize Agent Logic. La key vive server-side (Edge Function ai-chat);
   // aquí solo pasamos la organización y el nombre del agente.
+  // IMPORTANTE: este efecto NO depende de `activeClient` para que cambiar de
+  // cliente no borre el historial de conversación.
   useEffect(() => {
     if (currentOrg?.id) {
       const agentName = settings.aiAgentName || "LuchoBot";
       agentRef.current = new AIAgentService(currentOrg.id, agentName);
 
+      // Mensaje de bienvenida solo cuando se crea el agente (nueva org o nombre).
       setMessages([{
         role: 'model',
-        content: activeClient
-          ? `Hola, soy ${agentName}. Estoy revisando el historial de ${activeClient.name}.`
-          : `Hola, soy ${agentName}. Sistema listo para consultas y gestión.`
+        content: `Hola, soy ${agentName}. Sistema listo para consultas y gestión.`
       }]);
     }
-  }, [currentOrg?.id, settings.aiAgentName, activeClient]);
+  }, [currentOrg?.id, settings.aiAgentName]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -73,7 +74,8 @@ export const AIChat: React.FC<AIChatProps> = ({ activeClient, transactions }) =>
       setMessages(prev => [...prev, response]);
 
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'model', content: 'Lo siento, error comunicando con el cerebro central.' }]);
+      const msg = error instanceof Error ? error.message : 'Lo siento, error comunicando con el cerebro central.';
+      setMessages(prev => [...prev, { role: 'model', content: msg }]);
     } finally {
       setIsTyping(false);
     }
