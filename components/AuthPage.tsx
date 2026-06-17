@@ -3,6 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Loader2, LogIn, UserPlus, AlertTriangle, CheckCircle, ShieldCheck, Lock } from 'lucide-react';
 
+const mapAuthError = (raw: string): string => {
+   const m = (raw || '').toLowerCase();
+   if (m.includes('failed to fetch') || m.includes('network')) return 'Sin conexión. Verifica tu internet.';
+   if (m.includes('email not confirmed')) return 'Confirma tu correo antes de acceder.';
+   if (m.includes('too many') || m.includes('rate')) return 'Demasiados intentos. Espera unos minutos.';
+   if (m.includes('invalid login') || m.includes('credentials')) return 'Correo o contraseña incorrectos.';
+   if (m.includes('already registered') || m.includes('already exists')) return 'Ese correo ya está registrado. Inicia sesión.';
+   return 'Ocurrió un error. Intenta de nuevo.';
+};
+
 export const AuthPage: React.FC = () => {
    const [isLogin, setIsLogin] = useState(true);
    const [email, setEmail] = useState('');
@@ -48,9 +58,7 @@ export const AuthPage: React.FC = () => {
             }
          }
       } catch (err: any) {
-         // Security: Do not reveal exactly if email exists or password is wrong in generic messages if possible, 
-         // though Supabase error messages are usually safe.
-         setError('Credenciales inválidas o error de conexión.');
+         setError(mapAuthError(err?.message));
       } finally {
          setLoading(false);
       }
@@ -107,7 +115,7 @@ export const AuthPage: React.FC = () => {
                </div>
 
                {error && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3 text-sm text-red-600 animate-in slide-in-from-top-2">
+                  <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3 text-sm text-red-600 animate-in slide-in-from-top-2">
                      <AlertTriangle size={18} className="shrink-0 mt-0.5" />
                      <span>{error}</span>
                   </div>
