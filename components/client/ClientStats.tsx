@@ -74,7 +74,7 @@ export const ClientStats: React.FC<ClientStatsProps> = ({
   const chartData = useMemo(() => {
     // 1. Filter by Date Range
     const now = new Date();
-    let startDate = new Date(0); // Epoch
+    let startDate = timeRange === 'ALL' ? new Date(0) : new Date(now);
 
     if (timeRange === '1M') startDate.setMonth(now.getMonth() - 1);
     else if (timeRange === '3M') startDate.setMonth(now.getMonth() - 3);
