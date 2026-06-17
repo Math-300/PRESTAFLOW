@@ -431,7 +431,11 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
             const tx: Transaction = {
                 id: generateId(),
                 organization_id: getOrgId() || undefined,
-                clientId: 'BANK_INTERNAL',
+                // Movimiento interno: sin cliente. Antes era 'BANK_INTERNAL', que
+                // violaba la FK transactions.clientId→clients(id) y hacía fallar el
+                // insert (el saldo cambiaba pero el movimiento no se registraba).
+                // El tipo BANK_DEPOSIT/BANK_WITHDRAWAL ya identifica el movimiento.
+                clientId: null as any,
                 date: getToday(),
                 type: type === 'DEPOSIT' ? 'BANK_DEPOSIT' as any : 'BANK_WITHDRAWAL' as any,
                 amount: amount,

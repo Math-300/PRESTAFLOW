@@ -98,7 +98,7 @@ export interface Client {
 export interface Transaction {
   id: string;
   organization_id?: string;
-  clientId: string; // Can be 'BANK_INTERNAL' for non-client movements
+  clientId: string | null; // null for internal bank movements (BANK_DEPOSIT/WITHDRAWAL)
   date: string; // YYYY-MM-DD
   type: TransactionType | 'BANK_DEPOSIT' | 'BANK_WITHDRAWAL';
   amount: number;
