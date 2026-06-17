@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Pencil, Plus, X, UserPlus, Check, Calculator, Save, Landmark, RefreshCw, AlertCircle, LayoutGrid } from 'lucide-react';
 import { Client, BankAccount } from '../types';
-import { getToday, formatNumberWithDots, formatCurrency } from '../utils/format';
+import { getToday, formatNumberWithDots, formatCurrency, formatCurrencyMasked } from '../utils/format';
+import { useData } from '../contexts/DataContext';
 import { calculateLoanProjection } from '../services/loanUtils';
 
 interface ClientFormModalProps {
@@ -19,6 +20,8 @@ interface ClientFormModalProps {
 export const ClientFormModal: React.FC<ClientFormModalProps> = ({
    isOpen, onClose, onSubmit, editingClient, bankAccounts, allClients, nextCardCode, maxCardLimit = 500
 }) => {
+   const { settings } = useData();
+   const hideMoney = settings?.uiConfig?.privacyMode === true;
 
    // Internal State
    const [clientForm, setClientForm] = useState({
@@ -552,7 +555,7 @@ export const ClientFormModal: React.FC<ClientFormModalProps> = ({
                                  >
                                     {bankAccounts.length > 0 ? (
                                        bankAccounts.map(b => (
-                                          <option key={b.id} value={b.id}>{b.name} - ({formatCurrency(b.balance)})</option>
+                                          <option key={b.id} value={b.id}>{b.name} - ({formatCurrencyMasked(b.balance, hideMoney)})</option>
                                        ))
                                     ) : (
                                        <option value="">-- No hay cuentas --</option>

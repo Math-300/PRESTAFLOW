@@ -12,9 +12,10 @@ interface SidebarProps {
    onChangeView: (view: any) => void;
    companyName?: string;
    userRole?: UserRole | null;
+   hideMoney?: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, currentView, onChangeView, companyName, userRole }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, currentView, onChangeView, companyName, userRole, hideMoney }) => {
    const { organizations, currentOrg, switchOrganization, createOrganization } = useOrganization();
    const { user } = useAuth();
    const [showOrgMenu, setShowOrgMenu] = React.useState(false);
@@ -126,14 +127,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, currentView
                {isOpen && <span className="font-semibold text-sm">Cartera</span>}
             </button>
 
-            {/* Access to Banks is generally open, but restricted in specific actions inside */}
-            <button
-               onClick={() => onChangeView('BANKS')}
-               className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${currentView === 'BANKS' ? 'bg-blue-600 text-white shadow-lg' : 'hover:bg-slate-800 text-slate-400'}`}
-            >
-               <Landmark size={20} />
-               {isOpen && <span className="font-semibold text-sm">Tesorería</span>}
-            </button>
+            {/* Access to Banks is generally open, but restricted in specific actions inside.
+                Se oculta por completo cuando el Modo Privado (ocultar dinero) está activo. */}
+            {!hideMoney && (
+               <button
+                  onClick={() => onChangeView('BANKS')}
+                  className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${currentView === 'BANKS' ? 'bg-blue-600 text-white shadow-lg' : 'hover:bg-slate-800 text-slate-400'}`}
+               >
+                  <Landmark size={20} />
+                  {isOpen && <span className="font-semibold text-sm">Tesorería</span>}
+               </button>
+            )}
 
             <div className="w-full h-px bg-slate-700 my-2 opacity-50"></div>
 

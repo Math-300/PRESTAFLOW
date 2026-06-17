@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Client, Transaction, BankAccount, TransactionType, TransactionFormInput, AppLog } from '../types';
 import { recalculateClientTransactions } from '../services/transactionService';
+import { calculateNextPaymentDate } from '../services/loanUtils';
 import { generateId, getToday, getErrorMessage } from '../utils/format';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -360,8 +361,23 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
                 TransactionType.DISBURSEMENT,
                 TransactionType.REFINANCE,
             ];
-            if (SCHEDULED_TYPES.includes(data.type) && data.nextPaymentDate && data.nextPaymentDate !== activeClient.nextPaymentDate) {
-                await patchClientFields(activeClient.id, { nextPaymentDate: data.nextPaymentDate });
+            // Tipos de PAGO recurrente: al registrarlos, la cuota se considera cubierta
+            // y el próximo vencimiento debe avanzar una frecuencia (semanal/diario/etc).
+            const PAYMENT_TYPES: TransactionType[] = [
+                TransactionType.PAYMENT_CAPITAL,
+                TransactionType.PAYMENT_INTEREST,
+            ];
+            if (!editingTransaction && SCHEDULED_TYPES.includes(data.type)) {
+                // 1) Si el usuario fijó la fecha a mano en el formulario, esa manda.
+                let nextDate = data.nextPaymentDate;
+                // 2) Si no, y es un pago de cuota, la calculamos automáticamente
+                //    desde la fecha del pago según la frecuencia del cliente.
+                if (!nextDate && PAYMENT_TYPES.includes(data.type) && activeClient.paymentFrequency) {
+                    nextDate = calculateNextPaymentDate(data.date || getToday(), activeClient.paymentFrequency);
+                }
+                if (nextDate && nextDate !== activeClient.nextPaymentDate) {
+                    await patchClientFields(activeClient.id, { nextPaymentDate: nextDate });
+                }
             }
 
             // FIX #2: registrar la contraparte de una redirección. El cliente activo

@@ -81,7 +81,7 @@ export const ClientList: React.FC<ClientListProps> = ({
   };
 
   // --- Advanced Calculations (Memoized) ---
-  const { clientMetrics, stats, lateClientsList } = useMemo(() => {
+  const { clientMetrics, stats, lateClientsList, dueTodayList } = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
     const activeClients = clients.filter(c => c.status === 'ACTIVE');
 
@@ -120,15 +120,22 @@ export const ClientList: React.FC<ClientListProps> = ({
     // 2. Metrics
     const paymentsTodayCount = activeClients.filter(c => c.nextPaymentDate === today).length;
 
+    // Clientes a cobrar HOY (con saldo pendiente).
+    const dueTodayList = activeClients.filter(c => {
+      const bal = metrics[c.id]?.balance || 0;
+      return c.nextPaymentDate === today && bal > 0;
+    });
+
     // Filter Late Clients
     const lateList = activeClients.filter(c => {
       const bal = metrics[c.id]?.balance || 0;
       return c.nextPaymentDate && c.nextPaymentDate < today && bal > 0;
-    });
+    }).sort((a, b) => (a.nextPaymentDate || '').localeCompare(b.nextPaymentDate || '')); // más atrasados primero
 
     return {
       clientMetrics: metrics,
       lateClientsList: lateList,
+      dueTodayList,
       stats: { totalActive: activeClients.length, paymentsTodayCount, lateClientsCount: lateList.length, totalPortfolio, totalInterestPortfolio }
     };
   }, [clients, transactions]);
@@ -237,6 +244,79 @@ export const ClientList: React.FC<ClientListProps> = ({
         </>
       ) : (
         <>
+          {/* 0. AGENDA / AVISOS: a cobrar hoy y en mora (accionable) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6 shrink-0">
+            {/* A COBRAR HOY */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between px-4 py-3 bg-blue-50 border-b border-blue-100">
+                <div className="flex items-center gap-2 text-blue-700 font-black text-sm uppercase tracking-tight">
+                  <CalendarCheck size={18} /> A cobrar hoy
+                </div>
+                <span className="text-xs font-black bg-blue-600 text-white rounded-full px-2.5 py-0.5">{dueTodayList.length}</span>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {dueTodayList.length === 0 ? (
+                  <div className="px-4 py-5 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">Sin cobros para hoy ✓</div>
+                ) : (
+                  dueTodayList.slice(0, 4).map(c => (
+                    <div key={c.id} className="flex items-center justify-between gap-2 px-4 py-2.5 hover:bg-slate-50 transition-colors">
+                      <button onClick={() => onSelectClient(c.id)} className="flex-1 text-left min-w-0">
+                        <div className="font-bold text-sm text-slate-800 truncate">{c.name}</div>
+                        <div className="text-xs font-black text-slate-900">{formatCurrency(clientMetrics[c.id]?.balance || 0)}</div>
+                      </button>
+                      {can('create_transactions') && (
+                        <button onClick={() => onQuickAction(c, 'PAYMENT')} className="shrink-0 bg-blue-600 text-white text-[11px] font-black px-3 py-1.5 rounded-lg hover:bg-blue-700 active:scale-95 transition-all">Cobrar</button>
+                      )}
+                    </div>
+                  ))
+                )}
+                {dueTodayList.length > 4 && (
+                  <button onClick={() => setFilterMode('TODAY')} className="w-full px-4 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 flex items-center justify-center gap-1 transition-colors">
+                    Ver los {dueTodayList.length} <ChevronRight size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* EN MORA */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between px-4 py-3 bg-red-50 border-b border-red-100">
+                <div className="flex items-center gap-2 text-red-700 font-black text-sm uppercase tracking-tight">
+                  <AlertTriangle size={18} /> En mora
+                </div>
+                <span className="text-xs font-black bg-red-600 text-white rounded-full px-2.5 py-0.5">{lateClientsList.length}</span>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {lateClientsList.length === 0 ? (
+                  <div className="px-4 py-5 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">Nadie en mora ✓</div>
+                ) : (
+                  lateClientsList.slice(0, 4).map(c => {
+                    const daysLate = Math.max(0, Math.round((new Date(today).getTime() - new Date(c.nextPaymentDate!).getTime()) / 86400000));
+                    return (
+                      <div key={c.id} className="flex items-center justify-between gap-2 px-4 py-2.5 hover:bg-slate-50 transition-colors">
+                        <button onClick={() => onSelectClient(c.id)} className="flex-1 text-left min-w-0">
+                          <div className="font-bold text-sm text-slate-800 truncate">{c.name}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black text-red-600">{formatCurrency(clientMetrics[c.id]?.balance || 0)}</span>
+                            <span className="text-[10px] font-bold text-red-400">{daysLate} {daysLate === 1 ? 'día' : 'días'}</span>
+                          </div>
+                        </button>
+                        {can('create_transactions') && (
+                          <button onClick={() => onQuickAction(c, 'PAYMENT')} className="shrink-0 bg-red-600 text-white text-[11px] font-black px-3 py-1.5 rounded-lg hover:bg-red-700 active:scale-95 transition-all">Cobrar</button>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+                {lateClientsList.length > 4 && (
+                  <button onClick={() => setFilterMode('LATE')} className="w-full px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center justify-center gap-1 transition-colors">
+                    Ver los {lateClientsList.length} <ChevronRight size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* 1. Dashboard Metrics (Horizontal Scroll on Mobile) */}
           <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6 shrink-0 pb-3 md:pb-0 scrollbar-hide no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
             {settings.uiConfig?.dashboardCards?.portfolio !== false && (
@@ -460,8 +540,8 @@ export const ClientList: React.FC<ClientListProps> = ({
                               </div>
                               <div className="flex flex-col items-end">
                                 <span className="text-xs font-bold text-slate-400 uppercase">Deuda</span>
-                                <span className={`font-bold transition-all ${isLate ? 'text-red-600' : 'text-slate-900'} ${settings.uiConfig?.privacyMode ? 'filter blur-sm select-none' : ''}`}>
-                                  {settings.uiConfig?.privacyMode ? '••••••' : formatCurrency(balance)}
+                                <span className={`font-bold transition-all ${isLate ? 'text-red-600' : 'text-slate-900'}`}>
+                                  {formatCurrency(balance)}
                                 </span>
                               </div>
                             </div>
@@ -625,8 +705,8 @@ export const ClientList: React.FC<ClientListProps> = ({
                           <td className="p-4 text-right">
                             <div className="flex items-center justify-end gap-1">
                               <BarChart3 size={12} className="text-emerald-500 opacity-50" />
-                              <span className={`text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 transition-all ${settings.uiConfig?.privacyMode ? 'filter blur-sm select-none' : ''}`}>
-                                {settings.uiConfig?.privacyMode ? '••••••' : formatCurrency(metrics.totalInterest)}
+                              <span className={`text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 transition-all`}>
+                                {formatCurrency(metrics.totalInterest)}
                               </span>
                             </div>
                           </td>
@@ -643,8 +723,8 @@ export const ClientList: React.FC<ClientListProps> = ({
                             <div className="flex flex-col items-end gap-1">
                               {balance > 0 ? (
                                 <div className="text-right">
-                                  <div className={`font-bold text-sm transition-all ${isLate ? 'text-red-600' : 'text-slate-800'} ${settings.uiConfig?.privacyMode ? 'filter blur-sm select-none' : ''}`}>
-                                    {settings.uiConfig?.privacyMode ? '••••••' : formatCurrency(balance)}
+                                  <div className={`font-bold text-sm transition-all ${isLate ? 'text-red-600' : 'text-slate-800'}`}>
+                                    {formatCurrency(balance)}
                                   </div>
                                   {/* Mini Progress Bar of Debt vs Limit (Visual Cue) */}
                                   {client.loanLimit && client.loanLimit > 0 && (
@@ -658,8 +738,8 @@ export const ClientList: React.FC<ClientListProps> = ({
                               {isWaitingFunds && (
                                 <div className="flex flex-col items-end">
                                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Por recibir</span>
-                                  <span className={`text-sm font-bold text-orange-600 transition-all ${settings.uiConfig?.privacyMode ? 'filter blur-sm select-none' : ''}`}>
-                                    {settings.uiConfig?.privacyMode ? '••••••' : formatCurrency(client.pendingRedirectionBalance || 0)}
+                                  <span className={`text-sm font-bold text-orange-600 transition-all`}>
+                                    {formatCurrency(client.pendingRedirectionBalance || 0)}
                                   </span>
                                 </div>
                               )}

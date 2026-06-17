@@ -18,6 +18,14 @@ export const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
 };
 
+// Placeholder shown when "Modo Privado" (ocultar dinero) está activo.
+export const MONEY_HIDDEN = '$ ••••••';
+
+// Devuelve la cifra enmascarada si hidden=true, de lo contrario la formatea normal.
+export const formatCurrencyMasked = (val: number, hidden?: boolean) => {
+  return hidden ? MONEY_HIDDEN : formatCurrency(val);
+};
+
 export const getErrorMessage = (error: any): string => {
   if (!error) return 'Ocurrió un error inesperado.';
   
