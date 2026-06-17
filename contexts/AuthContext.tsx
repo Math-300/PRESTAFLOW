@@ -67,6 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    localStorage.removeItem('prestaFlow_inviteToken');
+    localStorage.removeItem('prestaFlow_currentOrgId');
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
