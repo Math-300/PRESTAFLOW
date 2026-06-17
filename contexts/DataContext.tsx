@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import {
     Client, Transaction, BankAccount, AppSettings, AppLog
@@ -49,6 +49,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
     const [historyLoading, setHistoryLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Refs for loadClientHistory (avoids stale closure deps)
+    const transactionsRef = useRef(transactions);
+    useEffect(() => { transactionsRef.current = transactions; }, [transactions]);
+    const loadedClients = useRef(new Set<string>());
 
     // --- PHASE 1: Local Cache Init ---
     useEffect(() => {
@@ -290,11 +295,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const loadClientHistory = useCallback(async (clientId: string) => {
         if (!currentOrg) return [];
 
-        // Find if we already have detailed tx for this client (checking for 'notes' presence as flag)
-        const existingTx = transactions.filter(t => t.clientId === clientId);
-        const hasDetails = existingTx.some(t => t.notes !== undefined);
-
-        if (hasDetails) return existingTx;
+        // Use ref-based set to avoid stale closures and prevent re-invalidation on every tx change
+        if (loadedClients.current.has(clientId)) {
+            return transactionsRef.current.filter(t => t.clientId === clientId);
+        }
 
         setHistoryLoading(true);
         try {
@@ -308,14 +312,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (error) throw error;
 
             if (data) {
-                const detailedTx = data as Transaction[];
-                // Update the main transactions list by merging details
-                setTransactions(prev => {
-                    // Remove summary versions and add detailed versions
-                    const otherClientsTx = prev.filter(t => t.clientId !== clientId);
-                    return [...otherClientsTx, ...detailedTx];
-                });
-                return detailedTx;
+                const detailed = data as Transaction[];
+                loadedClients.current.add(clientId);
+                // Merge without clearing first — no wallet flicker
+                setTransactions(prev => prev.filter(t => t.clientId !== clientId).concat(detailed));
+                return detailed;
             }
             return [];
         } catch (err: any) {
@@ -324,7 +325,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
             setHistoryLoading(false);
         }
-    }, [currentOrg, transactions]);
+    }, [currentOrg]);
 
     // Initial Settings Default
     const safeSettings = useMemo(() => settings || {
