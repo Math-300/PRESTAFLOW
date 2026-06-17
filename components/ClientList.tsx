@@ -21,6 +21,7 @@ interface ClientListProps {
 // Columns definition for the toggler
 type ColumnKey = 'card' | 'name' | 'guarantor' | 'contact' | 'last_activity' | 'profit' | 'balance' | 'limit' | 'dates' | 'status' | 'action';
 
+import { getToday } from '../utils/format';
 import { Skeleton, TableSkeleton, CardStatsSkeleton } from './ui/Skeleton';
 import { PullToRefresh } from './ui/PullToRefresh';
 import { SwipeableItem } from './ui/SwipeableItem';
@@ -435,7 +436,7 @@ export const ClientList: React.FC<ClientListProps> = ({
                     {filteredClients.map(client => {
                       const metrics = clientMetrics[client.id] || { balance: 0, totalInterest: 0, lastDate: null };
                       const balance = metrics.balance;
-                      const isLate = client.nextPaymentDate && new Date(client.nextPaymentDate) < new Date() && balance > 0;
+                      const isLate = !!client.nextPaymentDate && client.nextPaymentDate < getToday() && balance > 0;
                       const isWaitingFunds = (client.pendingRedirectionBalance || 0) > 0;
 
                       return (
@@ -544,7 +545,7 @@ export const ClientList: React.FC<ClientListProps> = ({
                   {filteredClients.map(client => {
                     const metrics = clientMetrics[client.id] || { balance: 0, totalInterest: 0, lastDate: null };
                     const balance = metrics.balance;
-                    const isLate = client.nextPaymentDate && new Date(client.nextPaymentDate) < new Date() && balance > 0;
+                    const isLate = !!client.nextPaymentDate && client.nextPaymentDate < getToday() && balance > 0;
                     const isPaid = balance <= 0 && client.status === 'ACTIVE';
                     const percentageUsed = client.loanLimit ? Math.min(100, (balance / client.loanLimit) * 100) : 0;
 

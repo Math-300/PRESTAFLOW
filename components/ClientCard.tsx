@@ -6,7 +6,7 @@ import {
    User, Calendar, MapPin, Phone, Briefcase, UserPlus, FileText,
    AlertTriangle, Trash2, Pencil, ExternalLink, X, Clock, ShieldCheck, Loader2
 } from 'lucide-react';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency, getToday } from '../utils/format';
 import { getReceiptSignedUrl } from '../utils/receipts';
 import { EditableField } from './ui/EditableField';
 import { ClientStats } from './client/ClientStats';
@@ -44,7 +44,7 @@ export const ClientCard: React.FC<ClientCardProps> = ({
 
    // --- Derived Data & Metrics ---
    const currentBalance = transactions.length > 0 ? transactions[transactions.length - 1].balanceAfter : 0;
-   const isLate = client.nextPaymentDate && new Date(client.nextPaymentDate) < new Date() && currentBalance > 0;
+   const isLate = !!client.nextPaymentDate && client.nextPaymentDate < getToday() && currentBalance > 0;
    const isWaitingFunds = (client.pendingRedirectionBalance || 0) > 0;
 
    // Calculate remaining days for priority
