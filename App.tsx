@@ -126,8 +126,11 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      const typing = !!el && (['INPUT','TEXTAREA','SELECT'].includes(el.tagName) || el.isContentEditable);
+
       // F1: Nuevo Cliente (Toggle)
-      if (e.key === 'F1') {
+      if (e.key === 'F1' && !typing) {
         e.preventDefault();
         if (isClientModalOpen) {
           setIsClientModalOpen(false);
@@ -137,13 +140,13 @@ const App: React.FC = () => {
       }
 
       // F2: Cobro Rápido (Toggle)
-      if (e.key === 'F2') {
+      if (e.key === 'F2' && !typing) {
         e.preventDefault();
         setIsQuickSearchOpen(prev => !prev);
       }
 
       // F3: Auditoría (Toggle)
-      if (e.key === 'F3') {
+      if (e.key === 'F3' && !typing) {
         e.preventDefault();
         if (can('view_audit_logs')) {
           setIsAuditOpen(prev => !prev);
@@ -153,7 +156,7 @@ const App: React.FC = () => {
       }
 
       // Safety Escape
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && !typing) {
         setIsClientModalOpen(false);
         setIsQuickSearchOpen(false);
         setIsAuditOpen(false);
