@@ -196,6 +196,9 @@ const App: React.FC = () => {
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
   };
 
+  // Modo Privado (org): oculta todo el dinero y la sección de Tesorería/Bancos.
+  const hideMoney = settings?.uiConfig?.privacyMode === true;
+
   // --- ACTIONS ---
 
   const handleDeleteClientWrapper = async (client: Client) => {
@@ -459,6 +462,8 @@ const App: React.FC = () => {
   };
 
   const handleViewChange = (view: any) => {
+    // Si el dinero está oculto, Tesorería no es accesible.
+    if (view === 'BANKS' && hideMoney) return;
     setCurrentView(view);
     setActiveClientId(null);
     if (window.innerWidth < 768) {
@@ -580,6 +585,7 @@ const App: React.FC = () => {
         onChangeView={handleViewChange}
         companyName={settings.companyName}
         userRole={userRole}
+        hideMoney={hideMoney}
       />
 
       <div className="flex-1 flex flex-col h-full overflow-hidden relative w-full">
@@ -601,7 +607,7 @@ const App: React.FC = () => {
                   <Users size={16} className="shrink-0" /> <span className="truncate">{activeClient.name}</span>
                 </span>
               )}
-              {currentView === 'BANKS' && (
+              {currentView === 'BANKS' && !hideMoney && (
                 <span className="flex items-center gap-2 text-green-900 font-bold bg-green-50 px-3 py-1 rounded-full animate-in fade-in">
                   <Landmark size={16} /> <span className="hidden sm:inline">Tesorería</span><span className="sm:hidden">Bancos</span>
                 </span>
@@ -705,7 +711,7 @@ const App: React.FC = () => {
                 </motion.div>
               )}
 
-              {currentView === 'BANKS' && (
+              {currentView === 'BANKS' && !hideMoney && (
                 <motion.div
                   key="BANKS"
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -754,6 +760,7 @@ const App: React.FC = () => {
         currentView={currentView}
         onChangeView={handleViewChange}
         onQuickPay={() => setIsQuickSearchOpen(true)}
+        hideMoney={hideMoney}
       />
 
       <QuickPaySearch

@@ -6,9 +6,10 @@ interface BottomNavbarProps {
     currentView: string;
     onChangeView: (view: any) => void;
     onQuickPay?: () => void;
+    hideMoney?: boolean;
 }
 
-export const BottomNavbar: React.FC<BottomNavbarProps> = ({ currentView, onChangeView, onQuickPay }) => {
+export const BottomNavbar: React.FC<BottomNavbarProps> = ({ currentView, onChangeView, onQuickPay, hideMoney }) => {
     return (
         <div
             className="md:hidden fixed bottom-0 left-0 right-0 glass-effect z-40 flex items-stretch justify-around px-2 shadow-[0_-4px_30px_rgba(0,0,0,0.04)]"
@@ -25,13 +26,15 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({ currentView, onChang
                 <span className="text-[10px] font-bold uppercase tracking-tighter">Resumen</span>
             </button>
 
-            <button
-                onClick={() => onChangeView('BANKS')}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${currentView === 'BANKS' ? 'text-blue-600' : 'text-slate-400'}`}
-            >
-                <Landmark size={20} className={currentView === 'BANKS' ? 'fill-blue-50' : ''} />
-                <span className="text-[10px] font-bold uppercase tracking-tighter">Bancos</span>
-            </button>
+            {!hideMoney && (
+                <button
+                    onClick={() => onChangeView('BANKS')}
+                    className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${currentView === 'BANKS' ? 'text-blue-600' : 'text-slate-400'}`}
+                >
+                    <Landmark size={20} className={currentView === 'BANKS' ? 'fill-blue-50' : ''} />
+                    <span className="text-[10px] font-bold uppercase tracking-tighter">Bancos</span>
+                </button>
+            )}
 
             {/* CENTER ACTION: QUICK PAY OR NEW CLIENT */}
             <div className="flex-1 flex flex-col items-center justify-center relative -top-3">

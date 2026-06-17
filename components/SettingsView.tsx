@@ -489,8 +489,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                     <Bot size={18} />
                                  </div>
                                  <div>
-                                    <div className="text-sm font-bold text-slate-800">Modo Privacidad</div>
-                                    <div className="text-[10px] text-slate-500">Oculta saldos y ganancias con un desenfoque</div>
+                                    <div className="text-sm font-bold text-slate-800">Modo Privado (ocultar mi dinero)</div>
+                                    <div className="text-[10px] text-slate-500">Oculta tu capital: Tesorería, saldos de cuentas y los totales del tablero (Capital en la Calle y Ganancia). La información de cada cliente (saldos, historial, pagos) se mantiene visible.</div>
                                  </div>
                               </div>
                               <label className="relative inline-flex items-center cursor-pointer">

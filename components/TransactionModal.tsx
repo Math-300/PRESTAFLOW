@@ -3,7 +3,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Client, TransactionType, BankAccount, Transaction, TransactionFormInput } from '../types';
 import { X, ArrowRightLeft, DollarSign, Calendar, Search, Landmark, AlertTriangle, TrendingUp, Paperclip, Loader2, Image as ImageIcon, Check } from 'lucide-react';
 import { calculateLoanProjection, calculateNextPaymentDate } from '../services/loanUtils';
-import { formatNumberWithDots, parseCurrency, formatCurrency } from '../utils/format';
+import { formatNumberWithDots, parseCurrency, formatCurrency, formatCurrencyMasked } from '../utils/format';
+import { useData } from '../contexts/DataContext';
 import { compressImage } from '../utils/imageUtils';
 import { getReceiptSignedUrl } from '../utils/receipts';
 
@@ -22,6 +23,8 @@ interface TransactionModalProps {
 export const TransactionModal: React.FC<TransactionModalProps> = ({
    isOpen, onClose, onSubmit, activeClient, allClients, bankAccounts, initialMode = 'PAYMENT', editingTransaction, clientTransactions = []
 }) => {
+   const { settings } = useData();
+   const hideMoney = settings?.uiConfig?.privacyMode === true;
    const [tab, setTab] = useState<'ENTRY' | 'EXIT'>('ENTRY');
    const [sourceType, setSourceType] = useState<'TREASURY' | 'REDIRECTION'>('TREASURY');
    const [redirectionWaitDays, setRedirectionWaitDays] = useState<string>('3');
@@ -405,7 +408,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                               >
                                  {bankAccounts.length > 0 ? (
                                     bankAccounts.map(b => (
-                                       <option key={b.id} value={b.id}>{b.name} - (Saldo: {formatCurrency(b.balance)})</option>
+                                       <option key={b.id} value={b.id}>{b.name} - (Saldo: {formatCurrencyMasked(b.balance, hideMoney)})</option>
                                     ))
                                  ) : (
                                     <option value="">-- No hay cuentas creadas --</option>
@@ -516,7 +519,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                               >
                                  {bankAccounts.length > 0 ? (
                                     bankAccounts.map(b => (
-                                       <option key={b.id} value={b.id}>{b.name} - (Saldo: {formatCurrency(b.balance)})</option>
+                                       <option key={b.id} value={b.id}>{b.name} - (Saldo: {formatCurrencyMasked(b.balance, hideMoney)})</option>
                                     ))
                                  ) : (
                                     <option value="">-- No hay cuentas creadas --</option>
