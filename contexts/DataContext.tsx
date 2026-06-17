@@ -98,6 +98,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (settingsRes.error) throw settingsRes.error;
             if (clientsRes.error) throw clientsRes.error;
             if (txRes.error) throw txRes.error;
+            if (banksRes.error) throw banksRes.error;
             if (logsRes.error && logsRes.error.code !== '42P01') {
                 // Ignore table missing error (42P01) for logs, as it might not be created yet 
                 console.warn("Could not fetch logs:", logsRes.error);
