@@ -51,21 +51,23 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
         const bank = bankAccounts.find(b => b.id === bankId);
         if (!bank) return;
 
-        const newBalance = bank.balance + amountChange;
+        const optimistic = bank.balance + amountChange;
 
-        // Evita dejar la cuenta en negativo (salvo reversiones explícitas).
-        if (!allowNegative && newBalance < 0) {
+        // Guard rápido en cliente (la RPC vuelve a validarlo server-side).
+        if (!allowNegative && optimistic < 0) {
             throw new Error("Fondos insuficientes en la cuenta para esta operación.");
         }
 
         // Optimistic Update UI
-        setBankAccounts(prev => prev.map(b => b.id === bankId ? { ...b, balance: newBalance } : b));
+        setBankAccounts(prev => prev.map(b => b.id === bankId ? { ...b, balance: optimistic } : b));
 
-        // Production Sync
-        const { error } = await supabase
-            .from('bank_accounts')
-            .update({ balance: newBalance })
-            .eq('id', bankId);
+        // Production Sync ATÓMICO: la RPC hace `balance = balance + delta` en la BD
+        // (evita perder movimientos concurrentes) y devuelve el saldo autoritativo.
+        const { data, error } = await supabase.rpc('bump_bank_balance', {
+            p_bank_id: bankId,
+            p_delta: amountChange,
+            p_allow_negative: allowNegative,
+        });
 
         if (error) {
             console.error("Error sync banco:", error);
@@ -73,6 +75,11 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
             recordAudit('SYSTEM', 'BANK', "Fallo de integridad bancaria", msg, 'ERROR');
             setBankAccounts(prev => prev.map(b => b.id === bankId ? { ...b, balance: bank.balance } : b));
             throw error;
+        }
+
+        // Corrige el optimista con el saldo real devuelto por la BD.
+        if (typeof data === 'number') {
+            setBankAccounts(prev => prev.map(b => b.id === bankId ? { ...b, balance: data } : b));
         }
     };
 

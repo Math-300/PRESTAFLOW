@@ -39,68 +39,26 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [permissions, setPermissions] = useState<MemberPermission[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. Check for Pending Invitations on Login (Enhanced Security with Token)
+  // 1. Check for Pending Invitations on Login (token-only + RPC atómica)
   const checkAndClaimInvitations = async () => {
     if (!user || !user.email) return;
 
+    // Seguridad: solo se reclama con token explícito (del enlace de invitación).
+    // Sin token NO se reclama nada (se eliminó el antiguo fallback por email).
+    const inviteToken = localStorage.getItem('prestaFlow_inviteToken');
+    if (!inviteToken) return;
+
     try {
-      const inviteToken = localStorage.getItem('prestaFlow_inviteToken');
-
-      // Only pending, non-expired invitations are claimable
-      let query = supabase
-        .from('organization_invitations')
-        .select('*')
-        .eq('status', 'pending')
-        .gt('expires_at', new Date().toISOString());
-
-      if (inviteToken) {
-        query = query.eq('token', inviteToken);
-      } else {
-        // Fallback to email only if no token, but token is preferred
-        query = query.eq('invited_email', user.email.toLowerCase());
+      // Reclamo atómico: la RPC valida el email del JWT contra invited_email,
+      // inserta el miembro y marca la invitación, todo en una transacción.
+      const { error } = await supabase.rpc('claim_invitation', { p_token: inviteToken });
+      // Limpiamos el token tras el intento (éxito o fallo) para no reintentar en bucle.
+      localStorage.removeItem('prestaFlow_inviteToken');
+      if (error) {
+        console.warn("No se pudo reclamar la invitación:", error.message);
+        return;
       }
-
-      const { data: pendingInvites } = await query;
-
-      if (pendingInvites && pendingInvites.length > 0) {
-        let claimed = false;
-        for (const invite of pendingInvites) {
-          // Security: Ensure email matches if not using token, or even if using token as extra check
-          if (invite.invited_email.toLowerCase() !== user.email.toLowerCase()) {
-            console.warn("Email mismatch for invitation", { invite: invite.invited_email, user: user.email });
-            continue;
-          }
-
-          // Idempotency check
-          const { data: existingMember } = await supabase
-            .from('organization_members')
-            .select('id')
-            .eq('organization_id', invite.organization_id)
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-          if (!existingMember) {
-            const { error: insertError } = await supabase.from('organization_members').insert({
-              organization_id: invite.organization_id,
-              user_id: user.id,
-              role: invite.role
-            });
-
-            if (!insertError) {
-              await supabase.from('organization_invitations').delete().eq('id', invite.id);
-              claimed = true;
-            }
-          } else {
-            await supabase.from('organization_invitations').delete().eq('id', invite.id);
-            claimed = true;
-          }
-        }
-
-        if (claimed) {
-          localStorage.removeItem('prestaFlow_inviteToken');
-          await fetchOrganizations();
-        }
-      }
+      await fetchOrganizations();
     } catch (error) {
       console.error("Error claiming invitations:", error);
     }

@@ -1,4 +1,4 @@
--- Saldo bancario atómico (resuelve race de read-modify-write). NO aplicado aún.
+-- Saldo bancario atómico (resuelve race de read-modify-write). APLICADA en prod 2026-06-17.
 -- SEGURIDAD: es security definer (bypassa RLS), así que valida explícitamente que
 -- la cuenta pertenezca a una organización donde el usuario es miembro.
 create or replace function public.bump_bank_balance(p_bank_id uuid, p_delta numeric, p_allow_negative boolean default false)

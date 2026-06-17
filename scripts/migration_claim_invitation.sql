@@ -1,4 +1,4 @@
--- Función para reclamar una invitación por token. NO aplicada aún.
+-- Función para reclamar una invitación por token. APLICADA en prod 2026-06-17.
 -- Verifica que el email del JWT coincide con invited_email, inserta en organization_members
 -- y marca/elimina la invitación. Todo ocurre en la misma transacción implícita.
 create or replace function public.claim_invitation(p_token text)
@@ -29,11 +29,9 @@ begin
   values (v_invite.organization_id, auth.uid(), v_invite.role)
   on conflict (organization_id, user_id) do nothing;
 
-  -- Marcar la invitación como aceptada. NOTA: organization_invitations NO tiene
-  -- columnas accepted_at/accepted_by; solo se actualiza status (alta de columnas
-  -- de auditoría = migración aparte si se desea).
+  -- Marcar la invitación como aceptada (la tabla tiene accepted_at).
   update public.organization_invitations
-     set status = 'accepted'
+     set status = 'accepted', accepted_at = now()
    where token = p_token;
 end $$;
 
