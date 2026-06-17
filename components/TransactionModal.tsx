@@ -71,13 +71,27 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       if (activeClient.paymentFrequency === 'DAILY') freqDiv = 30;
 
       const periodicRate = rate / freqDiv;
-      const calculatedInterest = Math.round(currentDebt * periodicRate);
-      const quota = activeClient.installmentAmount || 0;
-      let calculatedCapital = 0;
 
-      if (quota > 0) {
-         calculatedCapital = Math.max(0, quota - calculatedInterest);
+      let calculatedInterest: number;
+      if (activeClient.interestType === 'DIMINISHING') {
+         // Interés sobre saldo: varía según el capital pendiente
+         calculatedInterest = Math.round(currentDebt * periodicRate);
+      } else {
+         // Interés FIJO: plano por cuota, constante aunque baje el saldo
+         const inst = activeClient.installmentsCount || 0;
+         const term = activeClient.loanTermMonths || 0;
+         const monthlyRate = (activeClient.interestRate || 0) / 100;
+         let flatInterest = 0;
+         if (inst > 0 && (1 + monthlyRate * term) > 0) {
+            const principal = (activeClient.installmentAmount || 0) * inst / (1 + monthlyRate * term);
+            flatInterest = Math.round((principal * monthlyRate * term) / inst);
+         }
+         // Fallback si no hay datos suficientes para calcular el interés plano
+         calculatedInterest = (inst > 0 && flatInterest > 0) ? flatInterest : Math.round(currentDebt * periodicRate);
       }
+
+      const quota = activeClient.installmentAmount || 0;
+      const calculatedCapital = quota > 0 ? Math.max(0, Math.min(currentDebt, quota - calculatedInterest)) : 0;
 
       return {
          capital: calculatedCapital,
@@ -253,20 +267,23 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
+      if (isProcessing) return;
       if (insufficientFunds) return;
       // VALIDATION
       if (!parsedAmount && !parsedInterest) return;
-
-      setIsProcessing(true);
+      if (tab === 'ENTRY' && isRedirectionEntry && !targetClientId) {
+         alert('Debes seleccionar el cliente destino de la redirección.');
+         return;
+      }
 
       let clientUpdates: any = {};
       if (tab === 'EXIT') {
          clientUpdates = {
-            interestRate: parseFloat(simRate),
-            loanTermMonths: parseInt(simTerm),
+            interestRate: parseFloat(simRate) || 0,
+            loanTermMonths: parseInt(simTerm) || 1,
             paymentFrequency: simFreq,
             interestType: simType,
-            redirectionWaitDays: sourceType === 'REDIRECTION' ? parseInt(redirectionWaitDays) : undefined,
+            redirectionWaitDays: sourceType === 'REDIRECTION' ? (parseInt(redirectionWaitDays) || 0) : undefined,
             installmentAmount: exitSimulation.newQuota,
             installmentsCount: calculateLoanProjection({
                initialAmount: exitSimulation.totalNewDebt.toString(),
@@ -284,22 +301,27 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       const isRedirection = (tab === 'ENTRY' && isRedirectionEntry) || (tab === 'EXIT' && sourceType === 'REDIRECTION');
       const bankIdToSend = !isRedirection && selectedBankId ? selectedBankId : undefined;
 
-      await onSubmit({
-         type: getTransactionType() as TransactionType,
-         amount: parsedAmount || 0,
-         interest: parsedInterest || 0,
-         date,
-         nextPaymentDate,
-         notes,
-         targetClientId: (tab === 'ENTRY' && isRedirectionEntry) ? targetClientId : undefined,
-         bankAccountId: bankIdToSend,
-         newCardCode: (tab === 'EXIT') ? newCardCode : undefined,
-         receiptUrl: existingReceiptUrl,
-         ...clientUpdates
-      }, receiptFile);
-
-      setIsProcessing(false);
-      onClose();
+      setIsProcessing(true);
+      try {
+         const ok = await onSubmit({
+            type: getTransactionType() as TransactionType,
+            amount: parsedAmount || 0,
+            interest: parsedInterest || 0,
+            date,
+            nextPaymentDate,
+            notes,
+            targetClientId: (tab === 'ENTRY' && isRedirectionEntry) ? targetClientId : undefined,
+            bankAccountId: bankIdToSend,
+            newCardCode: (tab === 'EXIT') ? newCardCode : undefined,
+            receiptUrl: existingReceiptUrl,
+            ...clientUpdates
+         }, receiptFile);
+         if (ok) onClose();
+      } catch (_e) {
+         // El padre ya notifica el error; no cerramos para no perder datos
+      } finally {
+         setIsProcessing(false);
+      }
    };
 
    if (!isOpen || !activeClient) return null;
@@ -632,7 +654,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                </button>
                <button
                   onClick={handleSubmit}
-                  disabled={isProcessing || isCompressing || (tab === 'EXIT' && insufficientFunds)}
+                  disabled={isProcessing || isCompressing || (tab === 'EXIT' && insufficientFunds) || (tab === 'ENTRY' && isRedirectionEntry && !targetClientId)}
                   className={`flex-1 py-3 text-white font-bold rounded-lg shadow-lg flex items-center justify-center gap-2
                  ${tab === 'ENTRY' ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}
                  disabled:opacity-50 disabled:cursor-not-allowed`}
