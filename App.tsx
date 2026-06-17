@@ -408,7 +408,7 @@ const App: React.FC = () => {
           date: formData.creditStartDate,
           type: TransactionType.DISBURSEMENT,
           amount: parsedInitialAmount,
-          interestPaid: 0,
+          interestPaid: parseCurrency(formData.initialInterest) || 0,
           capitalPaid: 0,
           balanceAfter: parsedInitialAmount,
           notes: 'Desembolso Inicial (Tesorería)',
