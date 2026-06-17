@@ -76,6 +76,22 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
         }
     };
 
+    // --- HELPER: Patch puntual de campos de un cliente (optimista + DB) ---
+    // No pasa por updateClient para no exigir el permiso `edit_clients` en
+    // operaciones de cobro (avanzar fecha de pago, conciliar redirección). RLS
+    // sigue gobernando el acceso; si el usuario no tiene permiso, la transacción
+    // principal NO se revierte (solo se registra una advertencia).
+    const patchClientFields = async (clientId: string, fields: Partial<Client>) => {
+        const prevClients = clients;
+        setClients(prev => prev.map(c => c.id === clientId ? { ...c, ...fields } : c));
+        const { error } = await supabase.from('clients').update(fields).eq('id', clientId);
+        if (error) {
+            console.error("Error actualizando cliente:", error);
+            recordAudit('SYSTEM', 'CLIENT', "No se pudo actualizar el cliente", getErrorMessage(error), 'WARNING');
+            setClients(prevClients);
+        }
+    };
+
     // --- HELPER: File Upload ---
     const uploadReceipt = async (file: File): Promise<string | null> => {
         try {
@@ -282,6 +298,9 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
                 notes: data.notes || '',
                 bankAccountId: data.bankAccountId,
                 receiptUrl: finalReceiptUrl,
+                // Enlace a la contraparte cuando este cliente redirige un pago a otro.
+                relatedClientId: (data.type === TransactionType.REDIRECT_OUT) ? data.targetClientId : (editingTransaction?.relatedClientId),
+                relatedTransactionId: editingTransaction?.relatedTransactionId,
                 createdAt: editingTransaction?.createdAt || Date.now()
             };
 
@@ -291,13 +310,84 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
             const { error } = await supabase.from('transactions').upsert(dbPayload);
             if (error) throw error;
 
-            if (data.bankAccountId) {
-                const isOutgoing = [TransactionType.DISBURSEMENT, TransactionType.REFINANCE].includes(data.type);
-                const newVal = isOutgoing ? -data.amount : data.amount + (data.interest || 0);
+            const isOutgoingType = (t: TransactionType | 'BANK_DEPOSIT' | 'BANK_WITHDRAWAL') =>
+                [TransactionType.DISBURSEMENT, TransactionType.REFINANCE].includes(t as TransactionType);
+
+            if (editingTransaction) {
+                // FIX #1: al EDITAR, la fila se reemplaza vía upsert pero el efecto
+                // bancario del monto ANTERIOR seguía aplicado → la caja duplicaba el
+                // delta. Revertimos el viejo y aplicamos el nuevo, AGREGANDO por
+                // cuenta: si es la misma cuenta, un solo update (updateBankBalance lee
+                // el saldo del estado en memoria, que no se refresca entre llamadas).
+                const deltas: Record<string, number> = {};
+                if (editingTransaction.bankAccountId) {
+                    const oldReversal = isOutgoingType(editingTransaction.type)
+                        ? editingTransaction.amount
+                        : -(editingTransaction.amount + (editingTransaction.interestPaid || 0));
+                    deltas[editingTransaction.bankAccountId] = (deltas[editingTransaction.bankAccountId] || 0) + oldReversal;
+                }
+                if (data.bankAccountId) {
+                    const newVal = isOutgoingType(data.type) ? -data.amount : data.amount + (data.interest || 0);
+                    deltas[data.bankAccountId] = (deltas[data.bankAccountId] || 0) + newVal;
+                }
+                for (const [bankId, delta] of Object.entries(deltas)) {
+                    if (delta !== 0) await updateBankBalance(bankId, delta, true);
+                }
+            } else if (data.bankAccountId) {
+                const newVal = isOutgoingType(data.type) ? -data.amount : data.amount + (data.interest || 0);
                 await updateBankBalance(data.bankAccountId, newVal);
             }
 
             await recalculateClientTransactions(activeClient.id, [...transactions, transactionData]);
+
+            // FIX #3: avanzar la fecha de próximo pago del cliente. Antes nunca se
+            // persistía → tras el primer vencimiento todo cliente activo quedaba en
+            // "mora" permanente y se rompían filtros de cobro/notificaciones.
+            const SCHEDULED_TYPES: TransactionType[] = [
+                TransactionType.PAYMENT_CAPITAL,
+                TransactionType.PAYMENT_INTEREST,
+                TransactionType.DISBURSEMENT,
+                TransactionType.REFINANCE,
+            ];
+            if (SCHEDULED_TYPES.includes(data.type) && data.nextPaymentDate && data.nextPaymentDate !== activeClient.nextPaymentDate) {
+                await patchClientFields(activeClient.id, { nextPaymentDate: data.nextPaymentDate });
+            }
+
+            // FIX #2: registrar la contraparte de una redirección. El cliente activo
+            // PAGA (REDIRECT_OUT, ya guardado, reduce su deuda) y el dinero va a OTRO
+            // cliente, cuya deuda debe AUMENTAR (REDIRECT_IN) y su saldo en espera
+            // debe bajar. Antes solo se guardaba el lado del pagador → el dinero
+            // desaparecía de los libros del receptor.
+            if (!editingTransaction && data.type === TransactionType.REDIRECT_OUT && data.targetClientId) {
+                const target = clients.find(c => c.id === data.targetClientId);
+                if (target) {
+                    const inboundTx: Transaction = {
+                        id: generateId(),
+                        organization_id: getOrgId() || undefined,
+                        clientId: target.id,
+                        date: data.date,
+                        type: TransactionType.REDIRECT_IN,
+                        amount: Number(data.amount),
+                        interestPaid: 0,
+                        capitalPaid: 0,
+                        balanceAfter: 0,
+                        notes: `Redirección recibida de ${activeClient.name}`,
+                        relatedClientId: activeClient.id,
+                        relatedTransactionId: txId,
+                        createdAt: Date.now(),
+                    };
+                    const { createdAt: inCreated, ...safeIn } = inboundTx as any;
+                    const { error: inErr } = await supabase.from('transactions').insert({ ...safeIn, created_at: new Date(inCreated).toISOString() });
+                    if (inErr) throw inErr;
+
+                    // Recalcular saldos del cliente receptor incluyendo la entrada.
+                    await recalculateClientTransactions(target.id, [...transactions, transactionData, inboundTx]);
+
+                    // Bajar el saldo en espera de redirección del receptor.
+                    const remainingPending = Math.max(0, (target.pendingRedirectionBalance || 0) - Number(data.amount));
+                    await patchClientFields(target.id, { pendingRedirectionBalance: remainingPending });
+                }
+            }
 
             const actionType = editingTransaction ? 'UPDATE' : 'CREATE';
             const amountFmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(data.amount);

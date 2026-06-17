@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Client, TransactionType, BankAccount, Transaction, TransactionFormInput } from '../types';
 import { X, ArrowRightLeft, DollarSign, Calendar, Search, Landmark, AlertTriangle, TrendingUp, Paperclip, Loader2, Image as ImageIcon, Check } from 'lucide-react';
-import { calculateLoanProjection } from '../services/loanUtils';
+import { calculateLoanProjection, calculateNextPaymentDate } from '../services/loanUtils';
 import { formatNumberWithDots, parseCurrency, formatCurrency } from '../utils/format';
 import { compressImage } from '../utils/imageUtils';
 import { getReceiptSignedUrl } from '../utils/receipts';
@@ -182,9 +182,10 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                setPaymentMode('QUOTA');
             }
 
-            const d = new Date();
-            d.setDate(d.getDate() + 30);
-            setNextPaymentDate(d.toISOString().split('T')[0]);
+            // Próximo pago por defecto: un período según la frecuencia del cliente
+            // (antes era today+30 fijo, incorrecto para diario/semanal/quincenal).
+            const today = new Date().toISOString().split('T')[0];
+            setNextPaymentDate(calculateNextPaymentDate(today, activeClient.paymentFrequency || 'MONTHLY'));
          }
       }
    }, [isOpen, bankAccounts, initialMode, activeClient, editingTransaction]);
