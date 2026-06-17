@@ -85,11 +85,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const [settingsRes, clientsRes, txRes, banksRes, logsRes] = await Promise.all([
                 // SEGURIDAD: nunca traemos las columnas de keys (ai_api_key/api_key) al cliente.
                 supabase.from('settings').select('id, organization_id, company_name, default_interest_rate, use_openai, n8n_webhook_url, max_card_limit, ui_config, ai_provider, ai_agent_name, ai_system_prompt').eq('organization_id', currentOrg.id).limit(1).maybeSingle(),
-                supabase.from('clients').select('*').eq('organization_id', currentOrg.id).limit(2000),
+                supabase.from('clients').select('*').eq('organization_id', currentOrg.id).order('created_at', { ascending: false }).limit(2000),
                 // Phase 2: Optimization - Vertical Slicing. Only select summary columns.
                 supabase.from('transactions')
                     .select('id, organization_id, clientId, balanceAfter, interestPaid, date, type')
                     .eq('organization_id', currentOrg.id)
+                    .order('date', { ascending: false })
                     .limit(2000),
                 supabase.from('bank_accounts').select('*').eq('organization_id', currentOrg.id).limit(50),
                 supabase.from('audit_logs').select('*').eq('organization_id', currentOrg.id).order('created_at', { ascending: false }).limit(50)
@@ -148,6 +149,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setClients(clientsRes.data || []);
             setTransactions(txRes.data || []);
             setBankAccounts(banksRes.data || []);
+            if (txRes.data?.length === 2000) console.warn('[DataContext] Límite de 2000 alcanzado; faltan filas (pendiente: paginación)');
+            if (clientsRes.data?.length === 2000) console.warn('[DataContext] Límite de 2000 alcanzado; faltan filas (pendiente: paginación)');
             if (logsRes.data) {
                 // Map DB logs to AppLog
                 const mappedLogs: AppLog[] = logsRes.data.map((l: any) => ({
