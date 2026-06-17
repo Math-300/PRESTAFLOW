@@ -32,7 +32,7 @@ self.addEventListener('fetch', (event) => {
     if (event.request.mode === 'navigate') {
         // Network-first for navigation/HTML requests
         event.respondWith(
-            fetch(event.request).catch(() => caches.match('/') || caches.match('/index.html'))
+            fetch(event.request).catch(() => caches.match('/').then(r => r || caches.match('/index.html')))
         );
         return;
     }

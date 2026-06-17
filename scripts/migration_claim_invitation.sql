@@ -9,7 +9,7 @@ begin
   -- Buscar invitación pendiente, no expirada, por token
   select *
     into v_invite
-    from public.invitations
+    from public.organization_invitations
    where token = p_token
      and status = 'pending'
      and (expires_at is null or expires_at > now())
@@ -29,11 +29,11 @@ begin
   values (v_invite.organization_id, auth.uid(), v_invite.role)
   on conflict (organization_id, user_id) do nothing;
 
-  -- Marcar la invitación como aceptada (o eliminarla si se prefiere borrado duro)
-  update public.invitations
-     set status = 'accepted',
-         accepted_at = now(),
-         accepted_by = auth.uid()
+  -- Marcar la invitación como aceptada. NOTA: organization_invitations NO tiene
+  -- columnas accepted_at/accepted_by; solo se actualiza status (alta de columnas
+  -- de auditoría = migración aparte si se desea).
+  update public.organization_invitations
+     set status = 'accepted'
    where token = p_token;
 end $$;
 
