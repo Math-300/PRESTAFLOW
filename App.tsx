@@ -8,7 +8,7 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import { Client, Transaction, TransactionType, AppSettings, BankAccount, AppLog, TransactionFormInput } from './types';
 import { TransactionModal } from './components/TransactionModal';
-import { ClientList } from './components/ClientList';
+import { CarteraView } from './components/cartera/CarteraView';
 import { Sidebar } from './components/Sidebar';
 import { ToastContainer, ToastMessage, ToastType } from './components/Toast';
 import { ClientFormModal } from './components/ClientFormModal';
@@ -682,7 +682,7 @@ const App: React.FC = () => {
                   transition={{ duration: 0.2 }}
                   className="h-full flex flex-col"
                 >
-                  <ClientList
+                  <CarteraView
                     clients={clients}
                     transactions={transactions}
                     onSelectClient={handleClientSelection}
