@@ -247,7 +247,7 @@ export const ClientList: React.FC<ClientListProps> = ({
           {/* 0. AGENDA / AVISOS: a cobrar hoy y en mora (accionable) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6 shrink-0">
             {/* A COBRAR HOY */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+            <div className="glass-card rounded-xl overflow-hidden flex flex-col">
               <div className="flex items-center justify-between px-4 py-3 bg-blue-50 border-b border-blue-100">
                 <div className="flex items-center gap-2 text-blue-700 font-black text-sm uppercase tracking-tight">
                   <CalendarCheck size={18} /> A cobrar hoy
@@ -279,7 +279,7 @@ export const ClientList: React.FC<ClientListProps> = ({
             </div>
 
             {/* EN MORA */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+            <div className="glass-card rounded-xl overflow-hidden flex flex-col">
               <div className="flex items-center justify-between px-4 py-3 bg-red-50 border-b border-red-100">
                 <div className="flex items-center gap-2 text-red-700 font-black text-sm uppercase tracking-tight">
                   <AlertTriangle size={18} /> En mora
@@ -419,7 +419,7 @@ export const ClientList: React.FC<ClientListProps> = ({
           </div>
 
           {/* 2. Compact Search & Filters (Optimized for Mobile) */}
-          <div className="bg-white p-3 md:p-6 rounded-xl border border-slate-200 shadow-sm mb-4 md:mb-6 shrink-0">
+          <div className="glass-card p-3 md:p-6 rounded-xl mb-4 md:mb-6 shrink-0">
             <div className="flex flex-col gap-3 md:gap-4 ring-1 ring-slate-100 p-1 rounded-xl">
               <div className="relative w-full sm:w-96">
                 <Search className="absolute left-3 top-2.5 text-slate-400" size={18} />

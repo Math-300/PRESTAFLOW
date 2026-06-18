@@ -27,156 +27,16 @@
   <meta property="og:description" content="Gestión financiera inteligente." />
   <meta property="og:image" content="/logo-light.png" />
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* ============================================
-       PHASE 1: PHYSICS - Native Feel
-       ============================================ */
-
-    /* PREVENT RUBBER-BANDING (White bounce on edge scroll) */
-    html,
-    body {
-      overscroll-behavior-y: none;
-      overscroll-behavior-x: none;
-      -webkit-tap-highlight-color: transparent;
-      /* Remove grey tap highlight */
-    }
-
-    /* NATIVE SCROLL MOMENTUM on iOS */
-    * {
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      /* Hide scrollbars Firefox */
-      -ms-overflow-style: none;
-      /* Hide scrollbars IE/Edge */
-    }
-
-    /* Hide scrollbars Chrome/Safari/Webkit */
-    *::-webkit-scrollbar {
-      display: none;
-    }
-
-    /* SYSTEM FONT STACK */
-    html {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
-    }
-
-    /* ============================================
-       CSS VARIABLES - Safe Areas & Core
-       ============================================ */
-    :root {
-      --safe-area-top: env(safe-area-inset-top, 0px);
-      --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-      --safe-area-left: env(safe-area-inset-left, 0px);
-      --safe-area-right: env(safe-area-inset-right, 0px);
-    }
-
-    /* Full viewport stability */
-    body {
-      height: 100dvh;
-      min-height: 100dvh;
-      width: 100%;
-      overflow: hidden;
-      /* Prevent body scroll, handle in containers */
-      background-color: #f8fafc;
-      /* Match light theme color */
-      user-select: none;
-      /* App-like feel, disable text selection mostly */
-    }
-
-    /* Allow text selection in specific inputs */
-    input,
-    textarea,
-    [contenteditable="true"] {
-      user-select: text;
-    }
-
-    /* ============================================
-       PHASE 2: GLASSMORPHISM & ESTÉTICA
-       ============================================ */
-
-    /* Glass effect utility class for headers/modals */
-    .glass-effect {
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      background-color: rgba(255, 255, 255, 0.65);
-      /* More translucent for iOS feel */
-      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .glass-effect-dark {
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      background-color: rgba(15, 23, 42, 0.75);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    /* Smooth Transitions for Page Changes */
-    .page-enter {
-      opacity: 0;
-      transform: translateX(20px);
-    }
-
-    .page-enter-active {
-      opacity: 1;
-      transform: translateX(0);
-      transition: opacity 300ms, transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .page-exit {
-      opacity: 1;
-      transform: translateX(0);
-    }
-
-    .page-exit-active {
-      opacity: 0;
-      transform: translateX(-20px);
-      transition: opacity 300ms, transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    /* --- HIDE NUMBER SPINNERS --- */
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      appearance: none;
-      margin: 0;
-    }
-
-    input[type=number] {
-      -moz-appearance: textfield;
-      appearance: textfield;
-    }
-
-    @keyframes slideInChat {
-      from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    .animate-chat-open {
-      animation: slideInChat 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      transform-origin: bottom right;
-    }
-  </style>
-  <script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "recharts": "https://esm.sh/recharts@^3.6.0"
-  }
-}
-</script>
+  <script>
+    // Anti-FOUC: aplica el tema guardado ANTES de pintar para evitar parpadeo.
+    (function () {
+      try {
+        if (localStorage.getItem('prestaFlow_theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) { /* noop */ }
+    })();
+  </script>
 </head>
 
 <body class="bg-slate-50 text-slate-900 font-sans antialiased overflow-hidden"
