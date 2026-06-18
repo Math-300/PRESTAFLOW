@@ -1,0 +1,222 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   PHYSICS - Native Feel
+   ============================================ */
+html,
+body {
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+html {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ============================================
+   CSS VARIABLES - Safe Areas
+   ============================================ */
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+body {
+  height: 100dvh;
+  min-height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+  background-color: #f8fafc;
+  user-select: none;
+}
+
+html.dark body {
+  background-color: #0f172a;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text;
+}
+
+/* ============================================
+   GLASSMORPHISM
+   ============================================ */
+/* Header / barras: blur ligero (superficie pequeña y fija). */
+.glass-effect {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background-color: rgba(255, 255, 255, 0.65);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+html.dark .glass-effect {
+  background-color: rgba(15, 23, 42, 0.75);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Tarjeta para delimitar secciones. SIN backdrop-blur (va sobre listas que
+   scrollean → el blur por-frame causaba jank). Look limpio con borde+sombra. */
+.glass-card {
+  background-color: #ffffff;
+  border: 1px solid rgb(226 232 240);
+  box-shadow: 0 8px 30px rgba(2, 6, 23, 0.06);
+}
+
+html.dark .glass-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* ============================================
+   PAGE TRANSITIONS
+   ============================================ */
+.page-enter {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.page-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 300ms, transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Hide number spinners */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+@keyframes slideInChat {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-chat-open {
+  animation: slideInChat 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: bottom right;
+}
+
+/* ============================================
+   MODO OSCURO (retrofit global, con build-time Tailwind)
+   Se activa con .dark en <html>. Va después de @tailwind utilities,
+   así gana por orden/especificidad sin necesidad de !important.
+   ============================================ */
+
+/* Superficies sólidas */
+html.dark .bg-white { background-color: #1e293b; }
+html.dark .bg-slate-50 { background-color: #0f172a; }
+html.dark .bg-slate-100 { background-color: #1e293b; }
+html.dark .bg-slate-200 { background-color: #334155; }
+
+/* Variante responsive usada en el contenedor de la tabla (md:bg-white). */
+@media (min-width: 768px) {
+  html.dark .md\:bg-white { background-color: #1e293b; }
+}
+
+/* Superficies translúcidas (modificadores de opacidad) */
+html.dark .bg-white\/95 { background-color: rgba(30, 41, 59, 0.95); }
+html.dark .bg-white\/90 { background-color: rgba(30, 41, 59, 0.9); }
+html.dark .bg-white\/80 { background-color: rgba(30, 41, 59, 0.8); }
+html.dark .bg-white\/70 { background-color: rgba(30, 41, 59, 0.7); }
+html.dark .bg-white\/50 { background-color: rgba(30, 41, 59, 0.5); }
+html.dark .bg-white\/30 { background-color: rgba(30, 41, 59, 0.3); }
+html.dark .bg-white\/20 { background-color: rgba(30, 41, 59, 0.4); }
+html.dark .bg-white\/10 { background-color: rgba(30, 41, 59, 0.3); }
+html.dark .bg-slate-50\/50 { background-color: rgba(15, 23, 42, 0.5); }
+html.dark .bg-slate-100\/50 { background-color: rgba(30, 41, 59, 0.5); }
+
+/* Texto */
+html.dark .text-slate-900 { color: #f1f5f9; }
+html.dark .text-slate-800 { color: #e2e8f0; }
+html.dark .text-slate-700 { color: #cbd5e1; }
+html.dark .text-slate-600 { color: #cbd5e1; }
+html.dark .text-slate-500 { color: #94a3b8; }
+
+/* Bordes */
+html.dark .border-slate-100 { border-color: #243044; }
+html.dark .border-slate-200 { border-color: #334155; }
+html.dark .border-slate-300 { border-color: #475569; }
+
+/* Hovers neutros */
+html.dark .hover\:bg-slate-50:hover { background-color: #243044; }
+html.dark .hover\:bg-slate-100:hover { background-color: #334155; }
+html.dark .hover\:bg-slate-200:hover { background-color: #3f4d63; }
+
+/* Inputs / placeholders */
+html.dark input,
+html.dark textarea,
+html.dark select { color: #f1f5f9; }
+html.dark ::placeholder { color: #64748b; }
+
+/* Acentos suaves (-50/-100) atenuados para fondo oscuro */
+html.dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.15); }
+html.dark .bg-blue-100 { background-color: rgba(59, 130, 246, 0.2); }
+html.dark .bg-emerald-50, html.dark .bg-green-50 { background-color: rgba(16, 185, 129, 0.13); }
+html.dark .bg-emerald-100, html.dark .bg-green-100 { background-color: rgba(16, 185, 129, 0.2); }
+html.dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.14); }
+html.dark .bg-red-100 { background-color: rgba(239, 68, 68, 0.2); }
+html.dark .bg-amber-50, html.dark .bg-yellow-50 { background-color: rgba(245, 158, 11, 0.14); }
+html.dark .bg-amber-100, html.dark .bg-yellow-100 { background-color: rgba(245, 158, 11, 0.2); }
+html.dark .bg-orange-50 { background-color: rgba(249, 115, 22, 0.14); }
+html.dark .bg-orange-100 { background-color: rgba(249, 115, 22, 0.22); }
+
+html.dark .border-blue-100 { border-color: rgba(59, 130, 246, 0.3); }
+html.dark .border-emerald-100, html.dark .border-green-100 { border-color: rgba(16, 185, 129, 0.3); }
+html.dark .border-red-100 { border-color: rgba(239, 68, 68, 0.3); }
+html.dark .border-amber-100, html.dark .border-yellow-100 { border-color: rgba(245, 158, 11, 0.3); }
+html.dark .border-orange-100, html.dark .border-orange-200 { border-color: rgba(249, 115, 22, 0.3); }
+
+/* Texto de acento más claro para contraste en oscuro */
+html.dark .text-blue-900, html.dark .text-blue-800,
+html.dark .text-blue-700, html.dark .text-blue-600 { color: #93c5fd; }
+html.dark .text-red-900, html.dark .text-red-800,
+html.dark .text-red-700, html.dark .text-red-600 { color: #fca5a5; }
+html.dark .text-green-900, html.dark .text-green-800, html.dark .text-green-700,
+html.dark .text-emerald-700, html.dark .text-emerald-600, html.dark .text-green-600 { color: #6ee7b7; }
+html.dark .text-amber-900, html.dark .text-amber-800,
+html.dark .text-amber-700, html.dark .text-amber-600 { color: #fcd34d; }
+html.dark .text-orange-900, html.dark .text-orange-800, html.dark .text-orange-600 { color: #fdba74; }
