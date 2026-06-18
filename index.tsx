@@ -5,9 +5,9 @@ import './index.css';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { OrganizationProvider } from './contexts/OrganizationContext';
-
 import { DataProvider } from './contexts/DataContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -17,15 +17,17 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <ErrorBoundary>
-      <AuthProvider>
-        <OrganizationProvider>
-          <DataProvider>
-            <App />
-          </DataProvider>
-        </OrganizationProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+    <ThemeProvider>
+      <ErrorBoundary>
+        <AuthProvider>
+          <OrganizationProvider>
+            <DataProvider>
+              <App />
+            </DataProvider>
+          </OrganizationProvider>
+        </AuthProvider>
+      </ErrorBoundary>
+    </ThemeProvider>
   </React.StrictMode>
 );
 

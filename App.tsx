@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTheme } from './contexts/ThemeContext';
 import {
   Users, Settings, LogOut, Plus, Landmark, Folder,
   Wifi, Loader2, AlertTriangle, RefreshCw, Building2, Menu, Sun, Moon
@@ -199,20 +200,8 @@ const App: React.FC = () => {
   // Modo Privado (org): oculta todo el dinero y la sección de Tesorería/Bancos.
   const hideMoney = settings?.uiConfig?.privacyMode === true;
 
-  // Modo Oscuro (preferencia por dispositivo, persistida en localStorage).
-  const [isDark, setIsDark] = useState<boolean>(
-    typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
-  );
-  const toggleTheme = useCallback(() => {
-    setIsDark(prev => {
-      const next = !prev;
-      try {
-        document.documentElement.classList.toggle('dark', next);
-        localStorage.setItem('prestaFlow_theme', next ? 'dark' : 'light');
-      } catch (e) { /* noop */ }
-      return next;
-    });
-  }, []);
+  // Modo Oscuro: ahora gestionado por ThemeContext (extraído en Fase 1).
+  const { isDark, toggleTheme } = useTheme();
 
   // --- ACTIONS ---
 
