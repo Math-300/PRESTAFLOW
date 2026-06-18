@@ -7,16 +7,40 @@ interface PullToRefreshProps {
     onRefresh: () => Promise<void>;
 }
 
+/**
+ * Sube por el árbol DOM desde `node` hasta encontrar el primer ancestro
+ * cuyo overflow-y computado sea "auto" o "scroll" Y que tenga contenido
+ * desplazable (scrollHeight > clientHeight). Devuelve ese elemento o null.
+ */
+function findScrollableAncestor(node: HTMLElement | null): HTMLElement | null {
+    let el = node?.parentElement ?? null;
+    while (el && el !== document.body) {
+        const overflowY = window.getComputedStyle(el).overflowY;
+        if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+            return el;
+        }
+        el = el.parentElement;
+    }
+    return null;
+}
+
 export const PullToRefresh: React.FC<PullToRefreshProps> = ({ children, onRefresh }) => {
     const [pullOffset, setPullOffset] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const startY = useRef(0);
     const isDragging = useRef(false);
     const threshold = 80;
+    const rootRef = useRef<HTMLDivElement>(null);
 
     const onTouchStart = (e: React.TouchEvent) => {
-        // Only allow pull to refresh if we are at the top of the container
-        if (window.scrollY === 0) {
+        // Only allow pull to refresh if we are at the top of the scroll container.
+        // Read scrollTop from the real scrollable ancestor (body is overflow:hidden
+        // so window.scrollY is always 0 and cannot be trusted).
+        const scrollContainer = findScrollableAncestor(rootRef.current);
+        const atTop = scrollContainer !== null
+            ? scrollContainer.scrollTop <= 0
+            : window.scrollY === 0; // fallback for non-hidden-body layouts
+        if (atTop) {
             startY.current = e.touches[0].clientY;
             isDragging.current = true;
         }
@@ -61,6 +85,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({ children, onRefres
 
     return (
         <div
+            ref={rootRef}
             className="relative w-full h-full touch-pan-y"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}

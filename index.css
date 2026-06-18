@@ -22,6 +22,19 @@ body {
   display: none;
 }
 
+/* ============================================
+   SCROLLBAR UTILITY — .scrollbar-thin
+   Re-activa una barra visible y estilizada
+   sobreescribiendo la regla global de arriba.
+   Especificidad de clase > selector universal,
+   no se necesita !important.
+   ============================================ */
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: rgb(var(--color-muted) / 0.4) transparent; }
+.scrollbar-thin::-webkit-scrollbar { display: block; width: 8px; height: 8px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: rgb(var(--color-muted) / 0.35); border-radius: 9999px; }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: rgb(var(--color-muted) / 0.55); }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+
 html {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
 }
