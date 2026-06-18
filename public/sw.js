@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'presta-flow-v3';
+const CACHE_NAME = 'presta-flow-v4';
 const ASSETS = [
     '/',
     '/index.html',
@@ -7,6 +7,13 @@ const ASSETS = [
     '/icon-light.png',
     '/icon-dark.png'
 ];
+
+// Permite que la app pida la activación inmediata del SW nuevo (auto-actualización).
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
