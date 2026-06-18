@@ -114,7 +114,7 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
               placeholder="Buscar nombre, cédula..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-surface-2 border border-fg/8 rounded-xl focus:ring-2 focus:ring-primary/30 outline-none text-fg transition-all text-sm placeholder:text-muted"
+              className="w-full pl-10 pr-4 py-2 bg-canvas border border-fg/8 rounded-xl focus:ring-2 focus:ring-primary/30 outline-none text-fg transition-all text-sm placeholder:text-muted"
             />
           </div>
 
@@ -155,7 +155,7 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
             <div className="hidden md:flex relative z-[60]">
               <button
                 onClick={() => setShowColumnMenu(!showColumnMenu)}
-                className="flex items-center gap-2 px-3 py-2 bg-surface border border-fg/8 text-fg rounded-xl font-bold text-xs hover:bg-surface-2 transition-colors whitespace-nowrap shadow-soft"
+                className="flex items-center gap-2 px-3 py-2 bg-surface border border-fg/8 text-fg rounded-xl font-bold text-xs hover:bg-canvas transition-colors whitespace-nowrap shadow-soft"
               >
                 <Settings2 size={14} /> Columnas
               </button>
@@ -280,7 +280,7 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
 
           {/* DESKTOP TABLE VIEW */}
           <table className="w-full text-left border-collapse hidden md:table">
-            <thead className="bg-surface-2 sticky top-0 z-10 shadow-soft">
+            <thead className="bg-canvas sticky top-0 z-10 shadow-soft">
               <tr>
                 {visibleColumns.card && <th className="p-4 border-b border-fg/5 text-[11px] font-bold text-muted uppercase tracking-wider w-24 text-center">Tarjeta</th>}
                 {visibleColumns.name && <th className="p-4 border-b border-fg/5 text-[11px] font-bold text-muted uppercase tracking-wider">Cliente</th>}
@@ -535,7 +535,7 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
             </tbody>
           </table>
         </div>
-        <div className="p-2 border-t border-fg/5 bg-surface-2 text-[10px] text-muted text-center uppercase font-bold tracking-wider hidden md:block rounded-b-2xl">
+        <div className="p-2 border-t border-fg/5 bg-canvas text-[10px] text-muted text-center uppercase font-bold tracking-wider hidden md:block rounded-b-2xl">
           Mostrando {filteredClients.length} de {clients.length} clientes
         </div>
       </div>

@@ -571,7 +571,7 @@ const App: React.FC = () => {
 
   // --- MAIN APP RENDER ---
   return (
-    <div className="flex h-[100dvh] bg-surface-2 overflow-hidden font-sans relative">
+    <div className="flex h-[100dvh] bg-canvas overflow-hidden font-sans relative">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
 
       {/* Mobile Backdrop */}
@@ -662,7 +662,7 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 overflow-hidden bg-surface-2 relative flex flex-col">
+        <main className="flex-1 p-4 sm:p-6 overflow-hidden bg-canvas relative flex flex-col">
           {/* CONTENT AREA */}
           <React.Suspense fallback={
             <div className="flex-1 flex items-center justify-center bg-slate-50">

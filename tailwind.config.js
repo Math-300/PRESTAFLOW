@@ -30,7 +30,7 @@ export default {
       // de Tailwind (p.ej. bg-surface/50).
       colors: {
         surface:    'rgb(var(--color-surface)   / <alpha-value>)',
-        'surface-2':'rgb(var(--color-surface-2) / <alpha-value>)',
+        canvas:     'rgb(var(--color-surface-2) / <alpha-value>)',
         fg:         'rgb(var(--color-fg)        / <alpha-value>)',
         muted:      'rgb(var(--color-muted)     / <alpha-value>)',
         primary:    'rgb(var(--color-primary)   / <alpha-value>)',

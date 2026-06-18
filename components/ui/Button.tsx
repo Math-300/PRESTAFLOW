@@ -28,7 +28,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variants: Record<NonNullable<ButtonProps['variant']>, string> = {
     primary:   'bg-primary text-white hover:opacity-90 active:opacity-80',
-    secondary: 'bg-surface text-fg border border-fg/10 hover:bg-surface-2 active:bg-surface-2',
+    secondary: 'bg-surface text-fg border border-fg/10 hover:bg-canvas active:bg-canvas',
     danger:    'bg-danger text-white hover:opacity-90 active:opacity-80',
     ghost:     'bg-transparent text-fg hover:bg-fg/5 active:bg-fg/10',
   };
