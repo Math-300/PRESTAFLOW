@@ -55,9 +55,6 @@ export const Modal: React.FC<ModalProps> = ({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={title ? 'modal-title' : undefined}
     >
       {/* Panel: stopPropagation para no cerrar al clic interno */}
       <div
@@ -67,10 +64,13 @@ export const Modal: React.FC<ModalProps> = ({
           sizes[size],
         )}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? 'modal-title' : undefined}
       >
         {/* Header */}
         {(title !== undefined) && (
-          <div className="flex items-center justify-between px-5 py-4 border-b border-fg/8 shrink-0">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-fg/10 shrink-0">
             <h2 id="modal-title" className="text-lg font-bold text-fg">
               {title}
             </h2>
@@ -91,7 +91,7 @@ export const Modal: React.FC<ModalProps> = ({
 
         {/* Footer opcional */}
         {footer && (
-          <div className="px-5 py-4 border-t border-fg/8 shrink-0">
+          <div className="px-5 py-4 border-t border-fg/10 shrink-0">
             {footer}
           </div>
         )}
