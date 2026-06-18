@@ -571,7 +571,7 @@ const App: React.FC = () => {
 
   // --- MAIN APP RENDER ---
   return (
-    <div className="flex h-[100dvh] bg-slate-50 overflow-hidden font-sans relative">
+    <div className="flex h-[100dvh] bg-surface-2 overflow-hidden font-sans relative">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
 
       {/* Mobile Backdrop */}
@@ -594,35 +594,35 @@ const App: React.FC = () => {
 
       <div className="flex-1 flex flex-col h-full overflow-hidden relative w-full">
         <header
-          className="h-auto min-h-[64px] bg-white/80 backdrop-blur-xl border-b border-slate-200/50 flex items-center justify-between px-4 sm:px-6 shadow-sm shrink-0 z-10 sticky top-0"
+          className="h-auto min-h-[64px] glass-effect flex items-center justify-between px-4 sm:px-6 shrink-0 z-10 sticky top-0"
           style={{ paddingTop: 'var(--safe-area-top)' }}
         >
           <div className="flex items-center gap-3 overflow-hidden">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+              className="md:hidden p-2 text-fg/60 hover:bg-fg/5 rounded-xl transition-colors"
             >
               <Menu size={24} />
             </button>
 
-            <div className="text-slate-500 text-sm font-medium truncate flex-1">
+            <div className="text-muted text-sm font-medium truncate flex-1">
               {currentView === 'SINGLE_CLIENT' && activeClient && (
-                <span className="flex items-center gap-2 text-blue-900 font-bold bg-blue-50 px-3 py-1 rounded-full animate-in fade-in truncate max-w-[200px] sm:max-w-none">
+                <span className="flex items-center gap-2 text-primary font-bold bg-primary/8 px-3 py-1 rounded-full animate-in fade-in truncate max-w-[200px] sm:max-w-none">
                   <Users size={16} className="shrink-0" /> <span className="truncate">{activeClient.name}</span>
                 </span>
               )}
               {currentView === 'BANKS' && !hideMoney && (
-                <span className="flex items-center gap-2 text-green-900 font-bold bg-green-50 px-3 py-1 rounded-full animate-in fade-in">
+                <span className="flex items-center gap-2 text-success font-bold bg-success/10 px-3 py-1 rounded-full animate-in fade-in">
                   <Landmark size={16} /> <span className="hidden sm:inline">Tesorería</span><span className="sm:hidden">Bancos</span>
                 </span>
               )}
               {currentView === 'CLIENTS_LIST' && (
-                <span className="flex items-center gap-2 text-slate-900 font-bold animate-in fade-in">
+                <span className="flex items-center gap-2 text-fg font-bold animate-in fade-in">
                   <Folder size={16} /> <span className="hidden sm:inline">Gestión de Cartera</span><span className="sm:hidden">Clientes</span>
                 </span>
               )}
               {currentView === 'SETTINGS' && (
-                <span className="flex items-center gap-2 text-slate-900 font-bold animate-in fade-in">
+                <span className="flex items-center gap-2 text-fg font-bold animate-in fade-in">
                   <Settings size={16} /> <span className="hidden sm:inline">Configuración del Sistema</span><span className="sm:hidden">Ajustes</span>
                 </span>
               )}
@@ -630,13 +630,13 @@ const App: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            <div className="text-slate-400 text-xs italic hidden md:block">
+            <div className="text-muted text-xs italic hidden md:block">
               {isOnline ? (
-                <span className="px-2 py-1 rounded-full text-[10px] font-bold mr-2 border flex inline-flex items-center gap-1 bg-green-100 text-green-800 border-green-200">
+                <span className="px-2 py-1 rounded-full text-[10px] font-bold mr-2 border flex inline-flex items-center gap-1 bg-success/10 text-success border-success/20">
                   <Wifi size={10} /> ONLINE
                 </span>
               ) : (
-                <span className="px-2 py-1 rounded-full text-[10px] font-bold mr-2 border flex inline-flex items-center gap-1 bg-red-100 text-red-800 border-red-200">
+                <span className="px-2 py-1 rounded-full text-[10px] font-bold mr-2 border flex inline-flex items-center gap-1 bg-danger/10 text-danger border-danger/20">
                   <Wifi size={10} /> OFFLINE
                 </span>
               )}
@@ -645,7 +645,7 @@ const App: React.FC = () => {
 
             <button
               onClick={toggleTheme}
-              className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              className="p-2 text-muted hover:text-primary hover:bg-primary/8 rounded-xl transition-colors"
               title={isDark ? 'Modo claro' : 'Modo oscuro'}
               aria-label="Cambiar tema"
             >
@@ -654,7 +654,7 @@ const App: React.FC = () => {
 
             <button
               onClick={signOut}
-              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="p-2 text-muted hover:text-danger hover:bg-danger/8 rounded-xl transition-colors"
               title="Cerrar Sesión"
             >
               <LogOut size={20} />
@@ -662,7 +662,7 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 overflow-hidden bg-slate-100 relative flex flex-col">
+        <main className="flex-1 p-4 sm:p-6 overflow-hidden bg-surface-2 relative flex flex-col">
           {/* CONTENT AREA */}
           <React.Suspense fallback={
             <div className="flex-1 flex items-center justify-center bg-slate-50">

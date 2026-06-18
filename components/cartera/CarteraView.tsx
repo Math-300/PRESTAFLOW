@@ -119,14 +119,14 @@ export const CarteraView: React.FC<CarteraViewProps> = ({
       {isLoading ? (
         <>
           <CardStatsSkeleton />
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="bg-surface p-6 rounded-2xl border border-fg/5 shadow-soft">
             <TableSkeleton />
           </div>
         </>
       ) : (
         <>
           {/* Pestañas internas Resumen / Clientes */}
-          <div className="shrink-0 mb-4 md:mb-6">
+          <div className="shrink-0 mb-3 md:mb-5">
             <Tabs
               tabs={[
                 { key: 'resumen', label: 'Resumen', icon: <LayoutDashboard size={16} /> },
@@ -171,21 +171,21 @@ export const CarteraView: React.FC<CarteraViewProps> = ({
 
       {/* --- CONFIRMATION MODAL (SAFE DELETE) --- */}
       {clientToDelete && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden scale-100 animate-in zoom-in-95 duration-200">
-            <div className="bg-red-50 p-6 flex flex-col items-center text-center border-b border-red-100">
-              <div className="bg-red-100 p-3 rounded-full mb-4">
-                <AlertTriangle size={32} className="text-red-600" />
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-surface rounded-2xl shadow-pop max-w-sm w-full overflow-hidden border border-fg/8 animate-in zoom-in-95 duration-200">
+            <div className="bg-danger/8 p-6 flex flex-col items-center text-center border-b border-danger/15">
+              <div className="bg-danger/15 p-3 rounded-full mb-4">
+                <AlertTriangle size={32} className="text-danger" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900">¿Eliminar Cliente?</h3>
-              <p className="text-sm text-slate-600 mt-2">
-                Vas a eliminar permanentemente a <strong>{clientToDelete.name}</strong>. Esta acción no se puede deshacer.
+              <h3 className="text-xl font-bold text-fg">¿Eliminar Cliente?</h3>
+              <p className="text-sm text-muted mt-2">
+                Vas a eliminar permanentemente a <strong className="text-fg">{clientToDelete.name}</strong>. Esta acción no se puede deshacer.
               </p>
             </div>
-            <div className="p-4 bg-white flex gap-3">
+            <div className="p-4 bg-surface flex gap-3">
               <button
                 onClick={() => setClientToDelete(null)}
-                className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-colors"
+                className="flex-1 py-3 bg-fg/6 text-fg font-bold rounded-xl hover:bg-fg/10 transition-colors text-sm"
               >
                 Cancelar
               </button>
@@ -194,7 +194,7 @@ export const CarteraView: React.FC<CarteraViewProps> = ({
                   if (onDeleteClient) onDeleteClient(clientToDelete);
                   setClientToDelete(null);
                 }}
-                className="flex-1 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors shadow-lg"
+                className="flex-1 py-3 bg-danger text-white font-bold rounded-xl hover:opacity-90 active:opacity-80 transition-all shadow-soft text-sm"
               >
                 Sí, Eliminar
               </button>
@@ -206,7 +206,7 @@ export const CarteraView: React.FC<CarteraViewProps> = ({
       {can('create_clients') && (
         <button
           onClick={onNewClient}
-          className="md:hidden fixed right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center active:scale-95 transition-transform z-50 ring-4 ring-white"
+          className="md:hidden fixed right-6 w-14 h-14 bg-primary text-white rounded-full shadow-pop flex items-center justify-center active:scale-95 transition-transform z-50 ring-4 ring-surface"
           style={{ bottom: 'calc(80px + var(--safe-area-bottom))' }}
         >
           <Plus size={28} />
