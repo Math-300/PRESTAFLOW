@@ -44,7 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, currentView
    // Mobile: absolute/fixed, full height, z-30 (above content backdrop)
    // Desktop: relative, normal flow
    const containerClasses = `
-    glass-effect text-slate-300 transition-all duration-300 flex flex-col z-30
+    glass-sidebar text-slate-300 transition-all duration-300 flex flex-col z-30
     fixed md:relative inset-y-0 left-0
     border-r border-white/10 dark:border-slate-700/50
     ${isOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 md:w-20'}

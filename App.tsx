@@ -665,15 +665,15 @@ const App: React.FC = () => {
         <main className="flex-1 p-4 sm:p-6 overflow-hidden bg-canvas relative flex flex-col">
           {/* CONTENT AREA */}
           <React.Suspense fallback={
-            <div className="flex-1 flex items-center justify-center bg-slate-50">
+            <div className="flex-1 flex items-center justify-center bg-canvas">
               <div className="flex flex-col items-center gap-4">
                 <Loader2 size={40} className="text-blue-600 animate-spin" />
-                <p className="text-slate-400 font-medium animate-pulse uppercase tracking-widest text-[10px]">Cargando módulo...</p>
+                <p className="text-muted font-medium animate-pulse uppercase tracking-widest text-[10px]">Cargando módulo...</p>
               </div>
             </div>
           }>
             <AnimatePresence mode="wait" initial={false}>
-              {(currentView === 'CLIENTS_LIST' || currentView === 'DASHBOARD') && (
+              {currentView === 'CLIENTS_LIST' && (
                 <motion.div
                   key="CLIENTS_LIST"
                   initial={{ opacity: 0, x: -20 }}

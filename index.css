@@ -121,6 +121,15 @@ html.dark .glass-effect {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+/* Sidebar siempre oscuro — deliberado (estilo Linear/Vercel).
+   El texto blanco del sidebar es legible tanto en tema claro como oscuro
+   porque este fondo nunca cambia a blanco/translúcido. */
+.glass-sidebar {
+  background-color: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
 /* Tarjeta para delimitar secciones. SIN backdrop-blur (va sobre listas que
    scrollean → el blur por-frame causaba jank). Look limpio con borde+sombra. */
 .glass-card {
