@@ -15,15 +15,36 @@ const safeAdd = (a: number, b: number) => Math.round((a + b) * 100) / 100;
  * @param currentTransactionsList The full list of transactions (used to filter for the specific client).
  * @returns The updated list of transactions for that client with correct balances.
  */
-export const recalculateClientTransactions = async (clientId: string, currentTransactionsList: Transaction[]) => {
-  // 1. Get all transactions for this client
-  const clientTx = currentTransactionsList
-    .filter(t => t.clientId === clientId)
+export const recalculateClientTransactions = async (clientId: string, _currentTransactionsList?: Transaction[]) => {
+  // 1. Fetch the AUTHORITATIVE full rows from the DB for this client.
+  //    Los callers (saveTransaction/deleteTransaction) persisten su
+  //    insert/update/delete ANTES de llamar a recalc, así que la BD ya refleja
+  //    el estado deseado. NO calculamos sobre la lista en memoria: DataContext
+  //    carga las transacciones con columnas PARCIALES (sin `amount`), lo que
+  //    (a) calcularía saldos MAL (amount=0 para las tx previas) y (b) al
+  //    reescribir nulearía amount/notes/created_at. Leer de la BD evita ambos.
+  const { data: rows, error: fetchError } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('clientId', clientId);
+
+  if (fetchError) {
+    console.error('Error fetching transactions for recalculation:', fetchError);
+    throw new Error(`Sync Error: ${fetchError.message}`);
+  }
+
+  const clientTx = (rows || [])
+    // Normalizar created_at (BD snake, ISO string) -> createdAt (ms) para que el
+    // orden y el write-back de abajo PRESERVEN el timestamp de creación original.
+    .map((t: any) => ({
+        ...t,
+        createdAt: t.createdAt ?? (t.created_at ? new Date(t.created_at).getTime() : 0),
+    }))
     .sort((a, b) => {
         // Primary Sort: Date
         const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
         if (dateDiff !== 0) return dateDiff;
-        
+
         // Secondary Sort: CreatedAt Timestamp (Critical for same-day operations)
         // If createdAt is missing, fallback to 0 to avoid NaN sort issues
         const timeA = a.createdAt || 0;
