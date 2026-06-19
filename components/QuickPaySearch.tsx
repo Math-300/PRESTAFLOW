@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, Zap, X, ChevronRight } from 'lucide-react';
 import { Client, Transaction } from '../types';
+import { getToday } from '../utils/format';
 
 interface QuickPaySearchProps {
     isOpen: boolean;
@@ -90,7 +91,7 @@ export const QuickPaySearch: React.FC<QuickPaySearchProps> = ({
 
                             {/* 1. OVERDUE (Vencidos) */}
                             {(() => {
-                                const today = new Date().toISOString().split('T')[0];
+                                const today = getToday();
                                 const overdue = clients.filter(c =>
                                     c.status === 'ACTIVE' &&
                                     c.nextPaymentDate &&
@@ -138,7 +139,7 @@ export const QuickPaySearch: React.FC<QuickPaySearchProps> = ({
 
                             {/* 2. UPCOMING (Próximos) */}
                             {(() => {
-                                const today = new Date().toISOString().split('T')[0];
+                                const today = getToday();
                                 const futureDate = new Date();
                                 futureDate.setDate(futureDate.getDate() + 3); // Look ahead 3 days
                                 const futureIso = futureDate.toISOString().split('T')[0];

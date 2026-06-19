@@ -62,4 +62,12 @@ export const generateId = () => {
     return Math.random().toString(36).substr(2, 9);
 };
 
-export const getToday = () => new Date().toISOString().split('T')[0];
+// Fecha de HOY en zona LOCAL (YYYY-MM-DD). `toISOString()` usa UTC y en
+// UTC-5 (Colombia) adelanta el día después de las 7pm → marcaba mora y
+// "a cobrar hoy" un día antes de tiempo. Restamos el offset para que la
+// fecha UTC resultante coincida con la fecha local.
+export const getToday = () => {
+   const now = new Date();
+   const localMs = now.getTime() - now.getTimezoneOffset() * 60000;
+   return new Date(localMs).toISOString().split('T')[0];
+};

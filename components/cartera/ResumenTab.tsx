@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Client, AppSettings } from '../../types';
+import { getToday } from '../../utils/format';
 import {
   CalendarCheck, AlertTriangle, DollarSign, Wallet, TrendingUp, Zap,
   ChevronRight, CreditCard, Megaphone, UserCheck, Users, Plus,
@@ -36,7 +37,7 @@ export const ResumenTab: React.FC<ResumenTabProps> = ({
 }) => {
   const { clientMetrics, stats, lateClientsList, dueTodayList } = derived;
   const [isSendingMassMsg, setIsSendingMassMsg] = useState(false);
-  const today = new Date().toISOString().split('T')[0];
+  const today = getToday();
 
   // --- Mass Messaging Handler ---
   const handleMassNotification = async () => {

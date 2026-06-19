@@ -10,6 +10,7 @@
 //  - Modal global de confirmación de borrado + FAB móvil "Nuevo Cliente".
 import React, { useState, useMemo } from 'react';
 import { Client, Transaction, AppSettings } from '../../types';
+import { getToday } from '../../utils/format';
 import { AlertTriangle, Plus, LayoutDashboard, Users } from 'lucide-react';
 import { useOrganization } from '../../contexts/OrganizationContext';
 import { Tabs } from '../ui/Tabs';
@@ -49,7 +50,7 @@ export const CarteraView: React.FC<CarteraViewProps> = ({
 
   // --- Advanced Calculations (Memoized) — calculado UNA sola vez y compartido. ---
   const derived = useMemo<CarteraDerived>(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getToday();
     const activeClients = clients.filter(c => c.status === 'ACTIVE');
 
     // Group transactions by client

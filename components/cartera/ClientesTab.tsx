@@ -78,7 +78,7 @@ export const ClientesTab: React.FC<ClientesTabProps> = ({
   // --- Filtering ---
   const filteredClients = useMemo(() => {
     const q = searchTerm.toLowerCase();
-    const today = new Date().toISOString().split('T')[0];
+    const today = getToday();
 
     return clients.filter(c => {
       // 1. Text Search
