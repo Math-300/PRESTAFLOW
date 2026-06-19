@@ -294,7 +294,11 @@ export const ClientStats: React.FC<ClientStatsProps> = ({
               </div>
            </div>
            
-           {currentBalance === 0 && client.status === 'ACTIVE' && transactions.length > 0 && (
+           {/* #13: gate tolerante. Con `=== 0` estricto, un sobrepago (saldo
+               negativo) o un residuo de redondeo dejaba el botón "Cerrar Ciclo"
+               inalcanzable. `<= 0` (igual que ClientesTab) lo hace siempre
+               accesible cuando la deuda está saldada. */}
+           {currentBalance <= 0 && client.status === 'ACTIVE' && transactions.length > 0 && (
               <button 
                  onClick={onCloseCredit}
                  className="mt-6 w-full py-3 bg-slate-900 text-white rounded-lg font-bold text-sm hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 shrink-0"
