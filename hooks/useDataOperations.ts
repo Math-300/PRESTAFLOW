@@ -271,19 +271,27 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
     const saveTransaction = async (data: TransactionFormInput, activeClient: Client, editingTransaction: Transaction | null, receiptFile?: File | null) => {
         if (!validateConfig()) return false;
 
-        // Validación de rango: monto positivo, sin overflow, interés no negativo.
+        // Validación de rango: montos no negativos, sin overflow, y al menos uno
+        // (capital o interés) mayor a cero. FIX #6: antes exigía amount>0 SIEMPRE,
+        // lo que bloqueaba el pago de SOLO interés (capital=0, interés>0). Ahora el
+        // guard real es (capital+interés)>0; un préstamo en $0 sigue bloqueado
+        // porque en DISBURSEMENT/REFINANCE el interés viaja en 0.
         const amountNum = Number(data.amount);
         const interestNum = Number(data.interest) || 0;
-        if (!Number.isFinite(amountNum) || amountNum <= 0) {
-            addNotification("El monto debe ser un número positivo.", 'error');
-            return false;
-        }
-        if (amountNum > 1_000_000_000_000) {
-            addNotification("El monto excede el límite permitido.", 'error');
+        if (!Number.isFinite(amountNum) || amountNum < 0) {
+            addNotification("El monto no puede ser negativo.", 'error');
             return false;
         }
         if (!Number.isFinite(interestNum) || interestNum < 0) {
             addNotification("El interés no puede ser negativo.", 'error');
+            return false;
+        }
+        if (amountNum + interestNum <= 0) {
+            addNotification("Debe ingresar un capital o un interés mayor a cero.", 'error');
+            return false;
+        }
+        if (amountNum > 1_000_000_000_000) {
+            addNotification("El monto excede el límite permitido.", 'error');
             return false;
         }
 
@@ -377,6 +385,33 @@ export const useDataOperations = (addNotification: (msg: string, type: 'success'
                 }
                 if (nextDate && nextDate !== activeClient.nextPaymentDate) {
                     await patchClientFields(activeClient.id, { nextPaymentDate: nextDate });
+                }
+            }
+
+            // FIX #4: persistir la CONFIGURACIÓN del préstamo al cliente cuando se
+            // presta/refinancia. El modal calcula cuota/tasa/plazo/frecuencia/tipo
+            // de interés y los manda en `data`, pero saveTransaction los descartaba
+            // → tras refinanciar el cliente conservaba la cuota/tasa VIEJA y el
+            // siguiente cobro (split capital/interés vía entryCalc) salía mal.
+            // Solo en CREACIÓN: al EDITAR, el modal no repuebla el simulador y sus
+            // valores serían basura que corrompería la config del cliente.
+            const OUTGOING_TYPES: TransactionType[] = [
+                TransactionType.DISBURSEMENT,
+                TransactionType.REFINANCE,
+            ];
+            if (!editingTransaction && OUTGOING_TYPES.includes(data.type)) {
+                const loanConfig: Partial<Client> = {};
+                if (data.interestRate !== undefined) loanConfig.interestRate = data.interestRate;
+                if (data.loanTermMonths !== undefined) loanConfig.loanTermMonths = data.loanTermMonths;
+                if (data.paymentFrequency !== undefined) loanConfig.paymentFrequency = data.paymentFrequency;
+                if (data.interestType !== undefined) loanConfig.interestType = data.interestType;
+                if (data.installmentAmount !== undefined) loanConfig.installmentAmount = data.installmentAmount;
+                if (data.installmentsCount !== undefined) loanConfig.installmentsCount = data.installmentsCount;
+                if (data.redirectionWaitDays !== undefined) loanConfig.redirectionWaitDays = data.redirectionWaitDays;
+                if (data.pendingRedirectionBalance !== undefined) loanConfig.pendingRedirectionBalance = data.pendingRedirectionBalance;
+                if (data.newCardCode) loanConfig.cardCode = data.newCardCode;
+                if (Object.keys(loanConfig).length > 0) {
+                    await patchClientFields(activeClient.id, loanConfig);
                 }
             }
 

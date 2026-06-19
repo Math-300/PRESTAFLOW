@@ -80,17 +80,24 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
          // Interés sobre saldo: varía según el capital pendiente
          calculatedInterest = Math.round(currentDebt * periodicRate);
       } else {
-         // Interés FIJO: plano por cuota, constante aunque baje el saldo
-         const inst = activeClient.installmentsCount || 0;
+         // Interés FIJO (flat): plano por cuota, CONSTANTE aunque baje el saldo.
+         // interés/cuota = totalInterest/N = (P·tasa·meses)/N (igual que loanUtils).
+         // No depende de currentDebt → no debe bajar tras abonos.
          const term = activeClient.loanTermMonths || 0;
          const monthlyRate = (activeClient.interestRate || 0) / 100;
+         const quota = activeClient.installmentAmount || 0;
+         // N de cuotas: usa el almacenado o, si falta, lo recompone desde
+         // plazo×frecuencia (freqDiv). Antes, sin installmentsCount caía al
+         // fallback de saldo (currentDebt·periodicRate) → SUB-COBRABA con cada abono.
+         const inst = activeClient.installmentsCount || (term * freqDiv) || 0;
          let flatInterest = 0;
-         if (inst > 0 && (1 + monthlyRate * term) > 0) {
-            const principal = (activeClient.installmentAmount || 0) * inst / (1 + monthlyRate * term);
+         if (inst > 0 && quota > 0 && (1 + monthlyRate * term) > 0) {
+            // P se deduce de la cuota fija: quota·N = P·(1+tasa·meses).
+            const principal = (quota * inst) / (1 + monthlyRate * term);
             flatInterest = Math.round((principal * monthlyRate * term) / inst);
          }
-         // Fallback si no hay datos suficientes para calcular el interés plano
-         calculatedInterest = (inst > 0 && flatInterest > 0) ? flatInterest : Math.round(currentDebt * periodicRate);
+         // Último recurso SOLO si no hay cuota/datos (caso degenerado).
+         calculatedInterest = flatInterest > 0 ? flatInterest : Math.round(currentDebt * periodicRate);
       }
 
       const quota = activeClient.installmentAmount || 0;
@@ -240,6 +247,10 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       if (editingTransaction) return editingTransaction.type;
       if (tab === 'ENTRY') {
          if (isRedirectionEntry) return TransactionType.REDIRECT_OUT;
+         // FIX #6: pago de SOLO interés (capital 0, interés > 0) → PAYMENT_INTEREST.
+         // El motor de recálculo ya trata este tipo como change=0 (no toca capital),
+         // permitiendo conciliar interés cobrado sin amortizar deuda.
+         if (parsedAmount <= 0 && parsedInterest > 0) return TransactionType.PAYMENT_INTEREST;
          return TransactionType.PAYMENT_CAPITAL;
       } else {
          return isRefinance ? TransactionType.REFINANCE : TransactionType.DISBURSEMENT;
@@ -452,7 +463,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                         </div>
                      </div>
 
-                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                     <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
                         <div>
                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tasa %</label>
                            <input
@@ -471,7 +482,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                               className="w-full p-1.5 border border-slate-300 rounded bg-white text-slate-900 text-center font-bold text-sm"
                            />
                         </div>
-                        <div className="col-span-2 sm:col-span-1">
+                        <div>
                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Frecuencia</label>
                            <select
                               value={simFreq}
@@ -482,6 +493,17 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                               <option value="WEEKLY">Semanal</option>
                               <option value="BIWEEKLY">Quincenal</option>
                               <option value="MONTHLY">Mensual</option>
+                           </select>
+                        </div>
+                        <div>
+                           <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tipo de Interés</label>
+                           <select
+                              value={simType}
+                              onChange={e => setSimType(e.target.value as any)}
+                              className="w-full p-1.5 border border-slate-300 rounded bg-white text-slate-900 font-bold text-sm"
+                           >
+                              <option value="FIXED">Fijo (Simple)</option>
+                              <option value="DIMINISHING">Sobre Saldos</option>
                            </select>
                         </div>
                      </div>
