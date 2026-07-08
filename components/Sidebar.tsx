@@ -21,7 +21,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, currentView
    const [showOrgMenu, setShowOrgMenu] = React.useState(false);
 
    // Fallback name if empty
-   const displayName = currentOrg?.name || companyName || 'PrestaFlow';
+   const displayName = currentOrg?.name || companyName || 'Préstamos El Tigre';
    const initials = displayName.substring(0, 2).toUpperCase();
 
    // Check if user already owns an organization

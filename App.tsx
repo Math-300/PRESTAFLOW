@@ -501,7 +501,7 @@ const App: React.FC = () => {
           gap: '1.5rem'
         }}
       >
-        <img src="/icon-dark.png" alt="PrestaFlow" className="h-20 w-auto object-contain animate-pulse" style={{ height: '5rem' }} />
+        <img src="/icon-dark.png" alt="Préstamos El Tigre" className="h-20 w-auto object-contain animate-pulse" style={{ height: '5rem' }} />
         <div className="flex flex-col items-center gap-2" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Loader2 size={32} className="text-blue-500 animate-spin" style={{ color: '#3b82f6' }} />
         </div>
@@ -527,8 +527,8 @@ const App: React.FC = () => {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <ToastContainer toasts={toasts} removeToast={removeToast} />
         <div className="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 text-center animate-in zoom-in-95 border border-slate-200">
-          <img src="/icon-light.png" alt="PrestaFlow Logo" className="h-16 w-auto object-contain mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Bienvenido a PrestaFlow</h2>
+          <img src="/icon-light.png" alt="Préstamos El Tigre" className="h-16 w-auto object-contain mx-auto mb-6" />
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Bienvenido a Préstamos El Tigre</h2>
           <p className="text-slate-500 mb-8">Para comenzar, crea tu primera organización o negocio corporativo.</p>
 
           <form onSubmit={handleCreateOrg} className="space-y-4">
