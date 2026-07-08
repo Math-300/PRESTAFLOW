@@ -21,7 +21,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, currentView
    const [showOrgMenu, setShowOrgMenu] = React.useState(false);
 
    // Fallback name if empty
-   const displayName = currentOrg?.name || companyName || 'PrestaFlow';
+   const displayName = currentOrg?.name || companyName || 'Préstamos El Tigre';
    const initials = displayName.substring(0, 2).toUpperCase();
 
    // Check if user already owns an organization
@@ -59,7 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, currentView
                      onClick={() => setShowOrgMenu(!showOrgMenu)}
                   >
                      <div className="shrink-0">
-                        <img src="/logo-dark.png" alt="PrestaFlow Logo" className="h-8 w-auto object-contain transition-transform group-hover:scale-105" />
+                        <span className="text-2xl leading-none transition-transform group-hover:scale-105" role="img" aria-label="Préstamos El Tigre">🐯</span>
                      </div>
                      <div className="flex flex-col overflow-hidden">
                         <h1 className="text-xs font-bold text-white tracking-tight truncate group-hover:text-blue-200 transition-colors uppercase" title={displayName}>
@@ -73,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, currentView
                   </div>
                ) : (
                   <div className="cursor-pointer mx-auto group" onClick={() => setIsOpen(true)}>
-                     <img src="/icon-light.png" alt="P" className="w-8 h-8 object-contain transition-transform group-hover:scale-110" />
+                     <span className="text-2xl leading-none transition-transform group-hover:scale-110" role="img" aria-label="Préstamos El Tigre">🐯</span>
                   </div>
                )}
 

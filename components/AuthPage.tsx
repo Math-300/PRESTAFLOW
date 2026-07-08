@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Loader2, LogIn, UserPlus, AlertTriangle, CheckCircle, ShieldCheck, Lock } from 'lucide-react';
+import { Loader2, LogIn, AlertTriangle, ShieldCheck, Lock } from 'lucide-react';
 
 const mapAuthError = (raw: string): string => {
    const m = (raw || '').toLowerCase();
@@ -9,54 +9,25 @@ const mapAuthError = (raw: string): string => {
    if (m.includes('email not confirmed')) return 'Confirma tu correo antes de acceder.';
    if (m.includes('too many') || m.includes('rate')) return 'Demasiados intentos. Espera unos minutos.';
    if (m.includes('invalid login') || m.includes('credentials')) return 'Correo o contraseña incorrectos.';
-   if (m.includes('already registered') || m.includes('already exists')) return 'Ese correo ya está registrado. Inicia sesión.';
    return 'Ocurrió un error. Intenta de nuevo.';
 };
 
 export const AuthPage: React.FC = () => {
-   const [isLogin, setIsLogin] = useState(true);
    const [email, setEmail] = useState('');
    const [password, setPassword] = useState('');
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState<string | null>(null);
-   const [message, setMessage] = useState<string | null>(null);
 
-   const { signIn, signUp } = useAuth();
-
-   // Check for Invite Token in URL
-   useEffect(() => {
-      // Prefer the URL hash (no se envía al servidor ni queda en logs/Referer);
-      // se mantiene el query string como fallback para enlaces antiguos.
-      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-      const searchParams = new URLSearchParams(window.location.search);
-      const inviteToken = hashParams.get('invite') || searchParams.get('invite');
-      const inviteEmail = hashParams.get('email') || searchParams.get('email');
-      if (inviteToken) {
-         localStorage.setItem('prestaFlow_inviteToken', inviteToken);
-         setIsLogin(false); // Switch to Register
-         if (inviteEmail) setEmail(inviteEmail); // Pre-fill email
-         setMessage("Has recibido una invitación segura. Regístrate para unirte.");
-      }
-   }, []);
+   const { signIn } = useAuth();
 
    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       setError(null);
-      setMessage(null);
       setLoading(true);
 
       try {
-         if (isLogin) {
-            const { error } = await signIn(email, password);
-            if (error) throw error;
-         } else {
-            const { error, data } = await signUp(email, password);
-            if (error) throw error;
-            if (data?.user && !data?.session) {
-               setMessage('Registro exitoso. Revisa tu correo para confirmar.');
-               setIsLogin(true); // Volver al login
-            }
-         }
+         const { error } = await signIn(email, password);
+         if (error) throw error;
       } catch (err: any) {
          setError(mapAuthError(err?.message));
       } finally {
@@ -83,15 +54,18 @@ export const AuthPage: React.FC = () => {
          {/* Background Decor */}
          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
             <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[100px]"></div>
-            <div className="absolute bottom-[0%] right-[0%] w-[40%] h-[40%] bg-emerald-900/10 rounded-full blur-[100px]"></div>
+            <div className="absolute bottom-[0%] right-[0%] w-[40%] h-[40%] bg-amber-900/10 rounded-full blur-[100px]"></div>
          </div>
 
          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden relative z-10 animate-in fade-in zoom-in-95 duration-300 border border-slate-800">
 
-            {/* Header */}
+            {/* Header / Brand */}
             <div className="bg-slate-50 p-10 text-center border-b border-slate-100 flex flex-col items-center">
-               <img src="/logo-light.png" alt="PrestaFlow Logo" className="h-16 w-auto object-contain mb-2 animate-in fade-in slide-in-from-top-4 duration-700" />
-               <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 mt-2 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+               <span className="text-5xl mb-1 animate-in fade-in slide-in-from-top-4 duration-700" role="img" aria-label="Tigre">🐯</span>
+               <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">
+                  Préstamos <span className="text-amber-500">El Tigre</span>
+               </h1>
+               <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 mt-3 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
                   <Lock size={10} className="text-emerald-500" /> Acceso Seguro y Encriptado
                </p>
             </div>
@@ -99,20 +73,7 @@ export const AuthPage: React.FC = () => {
 
             {/* Form */}
             <div className="p-8 pt-6">
-               <div className="flex gap-4 mb-6 bg-slate-100 p-1 rounded-lg">
-                  <button
-                     onClick={() => { setIsLogin(true); setError(null); setMessage(null); }}
-                     className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${isLogin ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                  >
-                     Iniciar Sesión
-                  </button>
-                  <button
-                     onClick={() => { setIsLogin(false); setError(null); setMessage(null); }}
-                     className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${!isLogin ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                  >
-                     Registrarse
-                  </button>
-               </div>
+               <h2 className="text-center text-sm font-bold text-slate-500 uppercase tracking-wider mb-6">Iniciar Sesión</h2>
 
                {error && (
                   <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3 text-sm text-red-600 animate-in slide-in-from-top-2">
@@ -121,16 +82,9 @@ export const AuthPage: React.FC = () => {
                   </div>
                )}
 
-               {message && (
-                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3 text-sm text-green-700 animate-in slide-in-from-top-2">
-                     <CheckCircle size={18} className="shrink-0 mt-0.5" />
-                     <span>{message}</span>
-                  </div>
-               )}
-
                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Correo Corporativo</label>
+                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Correo</label>
                      <input
                         type="email"
                         required
@@ -157,14 +111,9 @@ export const AuthPage: React.FC = () => {
                   <button
                      type="submit"
                      disabled={loading}
-                     className={`w-full py-3 rounded-lg font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 mt-2
-                    ${isLogin ? 'bg-blue-600 hover:bg-blue-700' : 'bg-emerald-600 hover:bg-emerald-700'}
-                    disabled:opacity-70 disabled:cursor-not-allowed
-                 `}
+                     className="w-full py-3 rounded-lg font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 mt-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                     {loading ? <Loader2 size={20} className="animate-spin" /> : (
-                        isLogin ? <><LogIn size={20} /> Acceder</> : <><UserPlus size={20} /> Crear Cuenta</>
-                     )}
+                     {loading ? <Loader2 size={20} className="animate-spin" /> : <><LogIn size={20} /> Acceder</>}
                   </button>
                </form>
             </div>

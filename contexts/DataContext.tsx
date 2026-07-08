@@ -233,7 +233,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 id: s.id,
                                 organization_id: s.organization_id,
                                 // Robust mapping: check snake_case first (DB standard), then camelCase (legacy/bug fallback)
-                                companyName: s.company_name || s.companyName || 'PrestaFlow',
+                                companyName: s.company_name || s.companyName || 'Préstamos El Tigre',
                                 defaultInterestRate: s.default_interest_rate || s.defaultInterestRate || 5,
                                 useOpenAI: s.use_openai || s.useOpenAI || false,
                                 n8nWebhookUrl: s.n8n_webhook_url || s.n8nWebhookUrl,
@@ -345,7 +345,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Initial Settings Default
     const safeSettings = useMemo(() => settings || {
-        companyName: 'PrestaFlow',
+        companyName: 'Préstamos El Tigre',
         defaultInterestRate: 5,
         useOpenAI: false,
         maxCardLimit: 500,
