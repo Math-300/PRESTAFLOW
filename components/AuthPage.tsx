@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Loader2, LogIn, AlertTriangle, ShieldCheck, Lock } from 'lucide-react';
+import { Loader2, LogIn, AlertTriangle, CheckCircle, ShieldCheck, Lock, Mail, ArrowLeft } from 'lucide-react';
 
 const mapAuthError = (raw: string): string => {
    const m = (raw || '').toLowerCase();
@@ -9,25 +9,51 @@ const mapAuthError = (raw: string): string => {
    if (m.includes('email not confirmed')) return 'Confirma tu correo antes de acceder.';
    if (m.includes('too many') || m.includes('rate')) return 'Demasiados intentos. Espera unos minutos.';
    if (m.includes('invalid login') || m.includes('credentials')) return 'Correo o contraseña incorrectos.';
+   if (m.includes('redirect')) return 'Configuración de recuperación pendiente. Contacta al administrador.';
    return 'Ocurrió un error. Intenta de nuevo.';
 };
 
 export const AuthPage: React.FC = () => {
+   const [mode, setMode] = useState<'login' | 'forgot'>('login');
    const [email, setEmail] = useState('');
    const [password, setPassword] = useState('');
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState<string | null>(null);
+   const [message, setMessage] = useState<string | null>(null);
 
-   const { signIn } = useAuth();
+   const { signIn, resetPassword } = useAuth();
 
-   const handleSubmit = async (e: React.FormEvent) => {
+   const switchMode = (next: 'login' | 'forgot') => {
+      setMode(next);
+      setError(null);
+      setMessage(null);
+   };
+
+   const handleLogin = async (e: React.FormEvent) => {
       e.preventDefault();
       setError(null);
+      setMessage(null);
       setLoading(true);
-
       try {
          const { error } = await signIn(email, password);
          if (error) throw error;
+      } catch (err: any) {
+         setError(mapAuthError(err?.message));
+      } finally {
+         setLoading(false);
+      }
+   };
+
+   const handleForgot = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError(null);
+      setMessage(null);
+      setLoading(true);
+      try {
+         const { error } = await resetPassword(email);
+         if (error) throw error;
+         // Mensaje neutro: no revelamos si el correo existe o no.
+         setMessage('Si el correo está registrado, te enviamos un enlace para restablecer tu contraseña. Revisa tu bandeja (y spam).');
       } catch (err: any) {
          setError(mapAuthError(err?.message));
       } finally {
@@ -73,7 +99,9 @@ export const AuthPage: React.FC = () => {
 
             {/* Form */}
             <div className="p-8 pt-6">
-               <h2 className="text-center text-sm font-bold text-slate-500 uppercase tracking-wider mb-6">Iniciar Sesión</h2>
+               <h2 className="text-center text-sm font-bold text-slate-500 uppercase tracking-wider mb-6">
+                  {mode === 'login' ? 'Iniciar Sesión' : 'Recuperar Contraseña'}
+               </h2>
 
                {error && (
                   <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3 text-sm text-red-600 animate-in slide-in-from-top-2">
@@ -82,40 +110,91 @@ export const AuthPage: React.FC = () => {
                   </div>
                )}
 
-               <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Correo</label>
-                     <input
-                        type="email"
-                        required
-                        autoFocus
-                        placeholder="nombre@empresa.com"
-                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-slate-900"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                     />
+               {message && (
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3 text-sm text-green-700 animate-in slide-in-from-top-2">
+                     <CheckCircle size={18} className="shrink-0 mt-0.5" />
+                     <span>{message}</span>
                   </div>
+               )}
 
-                  <div>
-                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Contraseña</label>
-                     <input
-                        type="password"
-                        required
-                        placeholder="••••••••"
-                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-slate-900"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                     />
-                  </div>
+               {mode === 'login' ? (
+                  <form onSubmit={handleLogin} className="space-y-4">
+                     <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Correo</label>
+                        <input
+                           type="email"
+                           required
+                           autoFocus
+                           placeholder="nombre@empresa.com"
+                           className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-slate-900"
+                           value={email}
+                           onChange={e => setEmail(e.target.value)}
+                        />
+                     </div>
 
-                  <button
-                     type="submit"
-                     disabled={loading}
-                     className="w-full py-3 rounded-lg font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 mt-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                     {loading ? <Loader2 size={20} className="animate-spin" /> : <><LogIn size={20} /> Acceder</>}
-                  </button>
-               </form>
+                     <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Contraseña</label>
+                        <input
+                           type="password"
+                           required
+                           placeholder="••••••••"
+                           className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-slate-900"
+                           value={password}
+                           onChange={e => setPassword(e.target.value)}
+                        />
+                     </div>
+
+                     <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-3 rounded-lg font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 mt-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed"
+                     >
+                        {loading ? <Loader2 size={20} className="animate-spin" /> : <><LogIn size={20} /> Acceder</>}
+                     </button>
+
+                     <button
+                        type="button"
+                        onClick={() => switchMode('forgot')}
+                        className="w-full text-center text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors pt-1"
+                     >
+                        ¿Olvidaste tu contraseña?
+                     </button>
+                  </form>
+               ) : (
+                  <form onSubmit={handleForgot} className="space-y-4">
+                     <p className="text-xs text-slate-500 text-center -mt-2 mb-2">
+                        Escribe tu correo y te enviaremos un enlace para crear una nueva contraseña.
+                     </p>
+                     <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Correo</label>
+                        <input
+                           type="email"
+                           required
+                           autoFocus
+                           placeholder="nombre@empresa.com"
+                           className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-slate-900"
+                           value={email}
+                           onChange={e => setEmail(e.target.value)}
+                        />
+                     </div>
+
+                     <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-3 rounded-lg font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 mt-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-70 disabled:cursor-not-allowed"
+                     >
+                        {loading ? <Loader2 size={20} className="animate-spin" /> : <><Mail size={20} /> Enviar enlace</>}
+                     </button>
+
+                     <button
+                        type="button"
+                        onClick={() => switchMode('login')}
+                        className="w-full text-center text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors pt-1 flex items-center justify-center gap-1"
+                     >
+                        <ArrowLeft size={12} /> Volver a iniciar sesión
+                     </button>
+                  </form>
+               )}
             </div>
 
             <div className="bg-slate-50 px-8 py-4 text-center border-t border-slate-100">
