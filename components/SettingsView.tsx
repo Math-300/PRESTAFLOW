@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Settings, Save, Zap, Megaphone, Check, Bot, Terminal, Copy, Trash2, CreditCard, Shield, Activity, User, Filter, Search } from 'lucide-react';
 import { AppSettings, AppLog } from '../types';
 import { UserManagement } from './settings/UserManagement';
+import { ChangePasswordCard } from './ChangePasswordCard';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -408,6 +409,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                            </div>
                         </div>
                      </div>
+
+                     {/* SECURITY: CHANGE PASSWORD */}
+                     <ChangePasswordCard onNotify={onAddNotification} />
 
                      <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl border border-slate-800 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-4 opacity-10"><Activity size={80} /></div>
