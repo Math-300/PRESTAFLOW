@@ -28,6 +28,7 @@ const SettingsView = React.lazy(() => import('./components/SettingsView').then(m
 const AuthPage = React.lazy(() => import('./components/AuthPage').then(m => ({ default: m.AuthPage })));
 const AIChat = React.lazy(() => import('./components/AIChat').then(m => ({ default: m.AIChat })));
 const AuditLogModal = React.lazy(() => import('./components/AuditLogModal').then(m => ({ default: m.AuditLogModal })));
+const UpdatePasswordScreen = React.lazy(() => import('./components/UpdatePasswordScreen').then(m => ({ default: m.UpdatePasswordScreen })));
 
 const App: React.FC = () => {
   // 1. Critical Configuration Check
@@ -51,7 +52,7 @@ const App: React.FC = () => {
     );
   }
 
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut, isRecovery } = useAuth();
   const { currentOrg, isLoading: orgLoading, createOrganization, userRole, can } = useOrganization();
 
   // Use Centralized Data Context
@@ -485,6 +486,21 @@ const App: React.FC = () => {
       setIsSidebarOpen(false);
     }
   };
+
+  // --- PASSWORD RECOVERY ---
+  // Si el usuario llegó desde el enlace de "restablecer contraseña", mostramos
+  // la pantalla para fijar la nueva clave antes de entrar a la app.
+  if (isRecovery) {
+    return (
+      <React.Suspense fallback={
+        <div className="flex items-center justify-center h-screen bg-slate-900">
+          <Loader2 size={32} className="text-blue-500 animate-spin" />
+        </div>
+      }>
+        <UpdatePasswordScreen />
+      </React.Suspense>
+    );
+  }
 
   // --- AUTH & LOADING STATES ---
   if (authLoading || orgLoading) {
