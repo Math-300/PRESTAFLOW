@@ -1,0 +1,48 @@
+name: Keep Supabase Alive
+
+# Evita que el proyecto de Supabase (plan gratis) se pause por inactividad.
+# Supabase pausa los proyectos tras ~7 dias sin peticiones, asi que le hacemos
+# un ping ligero a la base de datos dos veces por semana.
+#
+# Requiere dos secrets del repo (Settings > Secrets and variables > Actions):
+#   - SUPABASE_URL       -> ej. https://fzdzyjdryjlfuvaxyuzv.supabase.co
+#   - SUPABASE_ANON_KEY  -> la clave anon publica (Settings > API en Supabase)
+
+on:
+  schedule:
+    # Lunes y jueves a las 06:00 UTC (max ~3-4 dias entre pings, muy por debajo de los 7)
+    - cron: '0 6 * * 1,4'
+  workflow_dispatch: {}   # permite ejecutarlo a mano desde la pestana Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping a la base de datos de Supabase
+        run: |
+          set -euo pipefail
+
+          URL="${{ secrets.SUPABASE_URL }}"
+          KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "::error::Faltan los secrets SUPABASE_URL y/o SUPABASE_ANON_KEY."
+            exit 1
+          fi
+
+          # Golpeamos PostgREST (capa de base de datos). Cualquier respuesta HTTP
+          # (200, 401, etc.) significa que el proyecto esta despierto y sirvio la
+          # peticion; solo fallamos si NO hay respuesta (proyecto pausado/caido).
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY" \
+            "$URL/rest/v1/profiles?select=id&limit=1" || echo "000")
+
+          echo "Respuesta HTTP: $CODE"
+
+          if [ "$CODE" = "000" ]; then
+            echo "::error::Sin respuesta del proyecto Supabase. Puede estar pausado o caido."
+            exit 1
+          fi
+
+          echo "Supabase respondio ($CODE) -> proyecto activo. Ping OK."
